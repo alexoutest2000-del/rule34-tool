@@ -216,3 +216,28 @@ class Rule34API:
         if data:
             return Post.from_dict(data[0])
         return None
+
+    def tag_suggestions(self, prefix: str, limit: int = 10) -> list[str]:
+        """Fetch tag suggestions matching a prefix."""
+        import urllib.parse
+        params = {
+            "page": "dapi",
+            "s": "tag",
+            "q": "index",
+            "name": prefix,
+            "limit": limit,
+        }
+        # Tags endpoint doesn't need auth
+        bare_params = {k: v for k, v in params.items()}
+        resp = self.session.get(
+            API_BASE,
+            params=bare_params,
+            timeout=self.timeout,
+        )
+        if resp.status_code == 403:
+            return []
+        resp.raise_for_status()
+        data = resp.json()
+        if not isinstance(data, list):
+            return []
+        return [item.get("name", "") for item in data if item.get("name")]

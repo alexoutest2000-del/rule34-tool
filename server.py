@@ -262,6 +262,21 @@ def api_delete_batch():
     return jsonify({"deleted": len(deleted)})
 
 
+@app.route("/api/tags")
+def api_tag_suggestions():
+    """Return tag autocomplete suggestions."""
+    if not api:
+        return jsonify([])
+    prefix = request.args.get("q", "").strip()
+    if not prefix or len(prefix) < 2:
+        return jsonify([])
+    try:
+        suggestions = api.tag_suggestions(prefix, limit=12)
+    except Exception:
+        suggestions = []
+    return jsonify(suggestions)
+
+
 # ─── UI ───────────────────────────────────────────────────────
 
 INDEX_HTML = """<!DOCTYPE html>
@@ -276,34 +291,87 @@ body {
     background: #f5ede0; color: #2a1f10;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     min-height: 100vh; display: flex; flex-direction: column;
+    padding-bottom: 80px;
 }
 /* ── Topbar ── */
 .topbar {
     position: sticky; top: 0; z-index: 100;
     background: #f0e6d4ee; backdrop-filter: blur(12px);
     border-bottom: 1px solid #d4c4a8;
-    padding: 14px 20px;
-    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    padding: 12px 20px;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
-.topbar h1 { font-size: 1rem; color: #3a2a10; margin-right: 8px; white-space: nowrap; }
-.topbar input[type="text"] {
-    flex: 1; min-width: 180px;
-    padding: 9px 13px; border: 1px solid #c8b488; border-radius: 8px;
-    background: #fff; color: #2a1f10; font-size: 0.9rem; outline: none;
-    transition: border-color 0.15s;
+.topbar h1 { font-size: 1rem; color: #3a2a10; margin-right: 6px; white-space: nowrap; }
+.topbar input[type="number"] { width: 70px; }
+
+/* ── Tag input ── */
+.tag-area {
+    flex: 1; min-width: 220px; display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 8px 10px; border: 1px solid #c8b488; border-radius: 8px;
+    background: #fff; min-height: 42px; align-items: center;
+    cursor: text; transition: border-color 0.15s;
 }
-.topbar input[type="text"]:focus { border-color: #c87c2e; }
-.topbar input[type="number"] { width: 75px; }
+.tag-area:focus-within { border-color: #c87c2e; }
+.tag-area input {
+    border: none; background: transparent; outline: none;
+    font-size: 0.9rem; color: #2a1f10; min-width: 120px; flex: 1;
+    padding: 2px;
+}
+.tag-chip {
+    display: flex; align-items: center; gap: 4px;
+    background: #f0e6d4; border: 1px solid #d4c4a8; border-radius: 20px;
+    padding: 3px 8px 3px 10px; font-size: 0.78rem; color: #5a4030;
+    white-space: nowrap; max-width: 160px;
+}
+.tag-chip span { overflow: hidden; text-overflow: ellipsis; }
+.tag-chip .remove-tag {
+    cursor: pointer; color: #a89060; font-size: 0.85rem; line-height: 1;
+    padding: 0 1px;
+}
+.tag-chip .remove-tag:hover { color: #c83020; }
+
+/* ── Autocomplete ── */
+.autocomplete-wrap { position: relative; }
+.tag-suggestions {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 300;
+    background: #fff; border: 1px solid #c8b488; border-radius: 8px;
+    box-shadow: 0 4px 16px #00000022; max-height: 220px; overflow-y: auto;
+    display: none; margin-top: 4px;
+}
+.tag-suggestions.open { display: block; }
+.tag-suggestion {
+    padding: 8px 14px; font-size: 0.85rem; color: #5a4030;
+    cursor: pointer; transition: background 0.1s;
+}
+.tag-suggestion:hover, .tag-suggestion.highlighted { background: #f0e6d4; }
+
+/* ── Topbar buttons ── */
 .topbar button {
     padding: 9px 18px; border: 1px solid #c8b488; border-radius: 8px;
     background: #fff; color: #5a4030; cursor: pointer;
     font-size: 0.88rem; transition: all 0.15s; white-space: nowrap;
 }
 .topbar button:hover { background: #f0e6d4; border-color: #a89060; }
-.topbar button.primary { background: #c87c2e; border-color: #c87c2e; color: #fff; }
+.topbar button.primary { background: #c87c2e; border-color: #c87c2e; color: #fff; font-size: 0.95rem; padding: 10px 24px; font-weight: 600; }
 .topbar button.primary:hover { background: #a86820; }
 .topbar button.icon-btn { padding: 9px 14px; font-size: 1rem; }
 .topbar button.active { background: #c87c2e; border-color: #c87c2e; color: #fff; }
+.topbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Download bar ── */
+.download-bar {
+    display: flex; align-items: center; gap: 14px; padding: 10px 20px;
+    background: #fff; border-bottom: 1px solid #d4c4a8;
+    flex-wrap: wrap;
+}
+.download-bar.hidden { display: none; }
+.download-bar .dl-count { font-size: 0.85rem; color: #5a4030; white-space: nowrap; }
+.download-bar .dl-count strong { color: #c87c2e; font-size: 1rem; }
+.dl-progress-wrap { flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px; }
+.dl-progress-bar { flex: 1; height: 8px; background: #d4c4a8; border-radius: 4px; overflow: hidden; }
+.dl-progress-fill { height: 100%; background: #c87c2e; border-radius: 4px; transition: width 0.4s; width: 0%; }
+.dl-progress-text { font-size: 0.78rem; color: #8a7050; white-space: nowrap; min-width: 60px; }
+.download-bar button { font-size: 0.88rem; }
 
 /* ── Tabs ── */
 .tabs {
@@ -327,14 +395,6 @@ body {
     padding: 8px 20px; font-size: 0.78rem; color: #8a7050;
     border-bottom: 1px solid #d4c4a8; min-height: 28px;
 }
-
-/* ── Search panel ── */
-.search-controls {
-    padding: 12px 20px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-    border-bottom: 1px solid #d4c4a8;
-}
-.search-controls label { font-size: 0.78rem; color: #8a7050; white-space: nowrap; }
-.search-controls input { vertical-align: middle; }
 
 /* ── Gallery ── */
 .gallery {
@@ -384,9 +444,7 @@ body {
     padding: 12px 20px; display: flex; gap: 10px; align-items: center;
     flex-wrap: wrap; border-bottom: 1px solid #d4c4a8;
 }
-.downloads-stats {
-    display: flex; gap: 20px; font-size: 0.82rem; color: #8a7050;
-}
+.downloads-stats { display: flex; gap: 20px; font-size: 0.82rem; color: #8a7050; }
 .downloads-stats span { color: #c87c2e; font-weight: 600; }
 .file-list { flex: 1; overflow-y: auto; padding: 12px 20px; }
 .file-item {
@@ -400,27 +458,6 @@ body {
 .file-item .fsize { font-size: 0.75rem; color: #8a7050; white-space: nowrap; }
 .file-item .fdel { color: #a89060; cursor: pointer; font-size: 0.8rem; }
 .file-item .fdel:hover { color: #c83020; }
-
-/* ── Bottom bar ── */
-.bottom-bar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: #f0e6d4ee; backdrop-filter: blur(12px);
-    border-top: 1px solid #d4c4a8;
-    padding: 12px 20px;
-    display: flex; align-items: center; justify-content: space-between;
-    z-index: 200; gap: 16px;
-}
-.bottom-bar.hidden { display: none; }
-.bottom-bar .selected-count { color: #c87c2e; font-weight: 600; font-size: 0.9rem; }
-.bottom-bar .actions { display: flex; gap: 10px; align-items: center; }
-.progress-bar {
-    flex: 1; height: 5px; background: #d4c4a8; border-radius: 3px;
-    overflow: hidden; max-width: 280px; display: none;
-}
-.progress-bar .fill {
-    height: 100%; background: #c87c2e; border-radius: 3px;
-    transition: width 0.3s; width: 0%;
-}
 
 /* ── Settings panel ── */
 .settings-overlay {
@@ -464,9 +501,7 @@ body {
     padding: 14px 20px; border-top: 1px solid #d4c4a8;
     display: flex; justify-content: flex-end; gap: 10px;
 }
-.status-msg {
-    padding: 6px 0; font-size: 0.8rem; min-height: 20px;
-}
+.status-msg { padding: 6px 0; font-size: 0.8rem; min-height: 20px; }
 .status-msg.ok { color: #3a7840; }
 .status-msg.err { color: #c83020; }
 </style>
@@ -476,14 +511,29 @@ body {
 <!-- Top bar -->
 <div class="topbar">
     <h1>🔞</h1>
-    <input type="text" id="tagInput" placeholder="Enter tags (space-separated)..." autofocus
-           onkeydown="if(event.key==='Enter')search()" style="max-width:500px" />
-    <button class="primary" onclick="search()">Search</button>
-    <input type="number" id="limitInput" value="100" min="1" max="1000" title="Max results per page" style="width:70px" />
-    <button onclick="selectAll()">All</button>
-    <button onclick="deselectAll()">None</button>
-    <button class="primary" id="dlBtn" onclick="downloadSelected()">⬇</button>
+    <div class="autocomplete-wrap" style="flex:1;min-width:220px;position:relative">
+        <div class="tag-area" id="tagArea" onclick="focusTagInput()">
+            <!-- tag chips injected here -->
+            <input type="text" id="tagInput" placeholder="Type tags..." autofocus autocomplete="off" />
+        </div>
+        <div class="tag-suggestions" id="tagSuggestions"></div>
+    </div>
+    <input type="number" id="limitInput" value="100" min="1" max="1000" title="Results per page" style="width:70px;padding:9px" />
+    <button onclick="selectAllPage()">Select Page</button>
+    <button onclick="deselectAll()">Deselect</button>
+    <button class="primary" id="dlBtn" onclick="downloadSelected()" disabled>⬇ Download</button>
     <button class="icon-btn" onclick="openSettings()">⚙</button>
+</div>
+
+<!-- Download bar (visible when items selected) -->
+<div class="download-bar hidden" id="downloadBar">
+    <div class="dl-count"><strong id="dlCountNum">0</strong> selected</div>
+    <div class="dl-progress-wrap">
+        <div class="dl-progress-bar"><div class="dl-progress-fill" id="dlProgressFill"></div></div>
+        <span class="dl-progress-text" id="dlProgressText">0%</span>
+    </div>
+    <button class="primary" onclick="downloadSelected()">⬇ Download</button>
+    <button onclick="deselectAll()">Clear</button>
 </div>
 
 <!-- Tabs -->
@@ -494,7 +544,7 @@ body {
 
 <!-- Search panel -->
 <div class="panel active" id="panelSearch">
-    <div class="status-bar" id="statusBar">Enter tags and click Search to begin.</div>
+    <div class="status-bar" id="statusBar">Type tags and press Enter or click Search.</div>
     <div class="gallery" id="gallery">
         <div class="empty"><p>Search for something to get started</p></div>
     </div>
@@ -504,26 +554,15 @@ body {
 <div class="panel" id="panelDownloads">
     <div class="downloads-header">
         <div class="downloads-stats" id="downloadsStats">
-            <span>0 files</span>
-            <span>0 MB</span>
+            <span>0 files</span><span>0 MB</span>
         </div>
         <button onclick="selectAllFiles()">Select All</button>
         <button onclick="deselectAllFiles()">Deselect All</button>
-        <button onclick="deleteSelectedFiles()" style="color:#dc2626">Delete Selected</button>
+        <button onclick="deleteSelectedFiles()" style="color:#c83020">Delete Selected</button>
         <button onclick="loadFiles()">↻ Refresh</button>
     </div>
     <div class="file-list" id="fileList">
-        <div class="empty"><p>No downloaded files yet. Search and download images to see them here.</p></div>
-    </div>
-</div>
-
-<!-- Bottom bar -->
-<div class="bottom-bar hidden" id="bottomBar">
-    <span><span class="selected-count" id="selectedCount">0</span> selected</span>
-    <div class="actions">
-        <span id="dlStatus" style="font-size:0.8rem;color:#555"></span>
-        <div class="progress-bar" id="progressBar"><div class="fill" id="progressFill"></div></div>
-        <button onclick="downloadSelected()">⬇ Download Selected</button>
+        <div class="empty"><p>No downloaded files yet.</p></div>
     </div>
 </div>
 
@@ -538,10 +577,7 @@ body {
             <div>
                 <label>API Credentials (rule34.xxx format)</label>
                 <input type="text" id="cfgCredentials" placeholder="&api_key=...&user_id=..." />
-                <div class="field-hint">
-                    Paste the full query string from your rule34 account page:<br/>
-                    <code>&amp;api_key=YOUR_KEY&amp;user_id=YOUR_ID</code>
-                </div>
+                <div class="field-hint">Paste the full query string from your rule34 account page:<br/><code>&amp;api_key=YOUR_KEY&amp;user_id=YOUR_ID</code></div>
             </div>
             <div>
                 <label>API Delay (seconds between requests)</label>
@@ -570,67 +606,219 @@ let allPosts = [];
 let selectedIds = new Set();
 let selectedFileNames = new Set();
 let currentTab = 'search';
-let currentDlId = null;
+let activeDlId = null;
+let tagSuggestions = [];
+let highlightedSuggestion = -1;
 
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
     loadStatus();
     loadFiles();
     loadSettings();
+    setupTagInput();
 });
 
 function loadStatus() {
     fetch('/api/status')
         .then(r => r.json())
         .then(s => {
-            const badge = document.querySelector('.topbar h1');
-            badge.textContent = s.configured ? '🔞' : '🔞⚠';
-            badge.title = s.configured
+            document.querySelector('.topbar h1').textContent = s.configured ? '🔞' : '🔞⚠';
+            document.querySelector('.topbar h1').title = s.configured
                 ? `Logged in as ...${s.user_id}`
-                : 'Not configured — click ⚙ to add credentials';
-        })
-        .catch(() => {});
+                : 'Not configured — click ⚙';
+        }).catch(() => {});
 }
 
 function loadSettings() {
-    fetch('/api/status')
-        .then(r => r.json())
-        .then(s => {
-            document.getElementById('cfgDelay').value = s.delay;
-            document.getElementById('cfgTimeout').value = s.timeout;
-            document.getElementById('cfgDownloadDir').value = s.download_dir;
-        });
+    fetch('/api/status').then(r => r.json()).then(s => {
+        document.getElementById('cfgDelay').value = s.delay;
+        document.getElementById('cfgTimeout').value = s.timeout;
+        document.getElementById('cfgDownloadDir').value = s.download_dir;
+        document.getElementById('cfgCredentials').placeholder = s.configured
+            ? `Configured (...${s.user_id}) — enter new value to replace`
+            : '&api_key=...&user_id=...';
+    });
 }
 
 function loadFiles() {
-    fetch('/api/files')
-        .then(r => r.json())
-        .then(data => {
-            const stats = document.getElementById('downloadsStats');
-            const mb = (data.files.reduce((a, f) => a + f.size, 0) / 1024 / 1024).toFixed(1);
-            stats.innerHTML = `<span>${data.total} files</span><span>${mb} MB</span>`;
-
-            const list = document.getElementById('fileList');
-            if (data.files.length === 0) {
-                list.innerHTML = '<div class="empty"><p>No downloaded files yet.</p></div>';
-                return;
-            }
-            list.innerHTML = data.files.map(f => `
-                <div class="file-item" data-name="${esc(f.name)}">
-                    <input type="checkbox" onchange="toggleFile('${esc(f.name)}', this.checked)" />
-                    <span class="fname" title="${esc(f.name)}">${esc(f.name)}</span>
-                    <span class="fsize">${formatSize(f.size)}</span>
-                    <span class="fdel" onclick="deleteFile('${esc(f.name)}')">✕</span>
-                </div>
-            `).join('');
-        });
+    fetch('/api/files').then(r => r.json()).then(data => {
+        const stats = document.getElementById('downloadsStats');
+        const mb = (data.files.reduce((a, f) => a + f.size, 0) / 1024 / 1024).toFixed(1);
+        stats.innerHTML = `<span>${data.total} files</span><span>${mb} MB</span>`;
+        const list = document.getElementById('fileList');
+        if (!data.files.length) {
+            list.innerHTML = '<div class="empty"><p>No downloaded files yet.</p></div>';
+            return;
+        }
+        list.innerHTML = data.files.map(f => `
+            <div class="file-item" data-name="${esc(f.name)}">
+                <input type="checkbox" onchange="toggleFile('${esc(f.name)}', this.checked)" />
+                <span class="fname" title="${esc(f.name)}">${esc(f.name)}</span>
+                <span class="fsize">${formatSize(f.size)}</span>
+                <span class="fdel" onclick="deleteFile('${esc(f.name)}')">✕</span>
+            </div>`).join('');
+    });
 }
 
 function esc(s) { return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
-function formatSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+function formatSize(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+// ── Tag Input System ──
+function setupTagInput() {
+    const input = document.getElementById('tagInput');
+    const area = document.getElementById('tagArea');
+
+    function syncFromTags() {
+        currentTags = currentTags.filter(Boolean);
+        const input2 = document.getElementById('tagInput');
+        if (input2) {
+            input2.value = currentTags.join(' ');
+        }
+        updateDlButton();
+    }
+
+    input.addEventListener('input', (e) => {
+        const val = input.value.trim();
+        const lastSpace = val.lastIndexOf(' ');
+        const current = val.slice(lastSpace + 1);
+
+        // Sync currentTags: treat trailing word as current input
+        const parts = val.split(/\\s+/);
+        currentTags = parts.slice(0, -1).filter(Boolean);
+        const incomplete = parts[parts.length - 1] || '';
+
+        // Render chips for completed tags
+        let chipsHtml = currentTags.map(t => `
+            <div class="tag-chip">
+                <span>${esc(t)}</span>
+                <span class="remove-tag" onclick="event.stopPropagation(); currentTags=currentTags.filter(x=>x!=='${esc(t)}'); renderChips();">X</span>
+            </div>`).join('');
+
+        // Put the chip area + input back
+        area.innerHTML = chipsHtml + `<input type="text" id="tagInput" placeholder="" autofocus autocomplete="off" />`;
+        const newInput = document.getElementById('tagInput');
+        newInput.value = incomplete;
+        newInput.focus();
+        updateDlButton();
+
+        if (incomplete.length >= 2) {
+            fetchSuggestions(incomplete);
+        } else {
+            closeSuggestions();
+        }
+    });
+
+    input.addEventListener('keydown', (e) => {
+        const newInput = document.getElementById('tagInput');
+        const val = newInput.value.trim();
+
+        if (e.key === ' ') {
+            e.preventDefault();
+            if (val) {
+                addTag(val);
+                newInput.value = '';
+                renderChips();
+            }
+            closeSuggestions();
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (val) addTag(val);
+            newInput.value = '';
+            renderChips();
+            closeSuggestions();
+            if (currentTags.length > 0) search();
+        } else if (e.key === 'Backspace' && val === '' && currentTags.length > 0) {
+            currentTags.pop();
+            renderChips();
+        } else if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (tagSuggestions.length) {
+                highlightedSuggestion = Math.min(highlightedSuggestion + 1, tagSuggestions.length - 1);
+                renderSuggestions();
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (tagSuggestions.length) {
+                highlightedSuggestion = Math.max(highlightedSuggestion - 1, 0);
+                renderSuggestions();
+            }
+        } else if (e.key === 'Escape') {
+            closeSuggestions();
+        }
+    });
+}
+
+function renderChips() {
+    const area = document.getElementById('tagArea');
+    let html = currentTags.map(t => `
+        <div class="tag-chip">
+            <span>${esc(t)}</span>
+            <span class="remove-tag" onclick="event.stopPropagation(); currentTags=currentTags.filter(x=>x!=='${esc(t)}'); renderChips();">X</span>
+        </div>`).join('');
+    html += `<input type="text" id="tagInput" placeholder="" autofocus autocomplete="off" />`;
+    area.innerHTML = html;
+    const input = document.getElementById('tagInput');
+    input.focus();
+    setupTagInput();
+    updateDlButton();
+}
+
+function addTag(tag) {
+    tag = tag.trim().replace(/\\s+/g, '_');
+    if (tag && !currentTags.includes(tag)) {
+        currentTags.push(tag);
+    }
+}
+
+function fetchSuggestions(prefix) {
+    clearTimeout(window._suggestDebounce);
+    window._suggestDebounce = setTimeout(() => {
+        fetch('/api/tags?q=' + encodeURIComponent(prefix))
+            .then(r => r.json())
+            .then(tags => {
+                tagSuggestions = tags.filter(t => !currentTags.includes(t));
+                highlightedSuggestion = -1;
+                renderSuggestions();
+            }).catch(() => { tagSuggestions = []; });
+    }, 200);
+}
+
+function renderSuggestions() {
+    const el = document.getElementById('tagSuggestions');
+    if (!tagSuggestions.length) { el.classList.remove('open'); return; }
+    el.classList.add('open');
+    el.innerHTML = tagSuggestions.map((t, i) =>
+        `<div class="tag-suggestion${i === highlightedSuggestion ? ' highlighted' : ''}" onclick="pickSuggestion(${i})">${esc(t)}</div>`
+    ).join('');
+}
+
+function pickSuggestion(i) {
+    const tag = tagSuggestions[i];
+    if (tag) {
+        addTag(tag);
+        renderChips();
+        closeSuggestions();
+        // Focus back on input
+        setTimeout(() => {
+            const input = document.getElementById('tagInput');
+            if (input) { input.focus(); }
+        }, 10);
+    }
+}
+
+function closeSuggestions() {
+    document.getElementById('tagSuggestions').classList.remove('open');
+    tagSuggestions = [];
+    highlightedSuggestion = -1;
+}
+
+function focusTagInput() {
+    const input = document.getElementById('tagInput');
+    if (input) input.focus();
 }
 
 // ── Tabs ──
@@ -645,14 +833,14 @@ function switchTab(tab) {
 
 // ── Search ──
 function search() {
-    const tags = document.getElementById('tagInput').value.trim();
-    if (!tags) return;
-    const limit = document.getElementById('limitInput').value || 100;
+    const tags = getCurrentTags();
+    if (!tags.length) return;
+    const limit = document.getElementById('limitInput')?.value || 100;
 
     document.getElementById('statusBar').textContent = 'Searching...';
     document.getElementById('gallery').innerHTML = '<div class="loading">Searching...</div>';
 
-    fetch(`/api/search?tags=${encodeURIComponent(tags)}&limit=${limit}`)
+    fetch(`/api/search?tags=${encodeURIComponent(tags.join(' '))}&limit=${limit}`)
         .then(r => r.json())
         .then(posts => {
             if (posts.error) throw new Error(posts.error);
@@ -660,36 +848,32 @@ function search() {
             selectedIds.clear();
             renderGallery();
             const msg = posts.length === 0 ? 'No results' : `${posts.length} results`;
-            document.getElementById('statusBar').textContent = `${msg} for "${tags}"`;
+            document.getElementById('statusBar').textContent = `${msg} for "${tags.join(' ')}"`;
         })
         .catch(e => {
-            document.getElementById('gallery').innerHTML =
-                `<div class="empty"><p>Error: ${e.message}</p></div>`;
+            document.getElementById('gallery').innerHTML = `<div class="empty"><p>Error: ${e.message}</p></div>`;
             document.getElementById('statusBar').textContent = 'Search failed.';
         });
 }
 
 function renderGallery() {
     const gallery = document.getElementById('gallery');
-    if (allPosts.length === 0) {
+    if (!allPosts.length) {
         gallery.innerHTML = '<div class="empty"><p>No results found</p></div>';
         return;
     }
     gallery.innerHTML = allPosts.map(p => `
-        <div class="card${selectedIds.has(p.id) ? ' selected' : ''}" data-id="${p.id}"
-             onclick="toggleCard(${p.id}, event)">
-            <input type="checkbox" class="sel" ${selectedIds.has(p.id) ? 'checked' : ''}
-                   onclick="event.stopPropagation(); toggleCard(${p.id}, event)" />
+        <div class="card${selectedIds.has(p.id) ? ' selected' : ''}" data-id="${p.id}" onclick="toggleCard(${p.id}, event)">
+            <input type="checkbox" class="sel" ${selectedIds.has(p.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleCard(${p.id}, event)" />
             <img class="thumb" src="${p.preview_url}" alt="Post ${p.id}" loading="lazy"
-                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%23111%22 width=%22200%22 height=%22200%22/><text fill=%22%23333%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22>Err</text></svg>'" />
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%23f0e6d4%22 width=%22200%22 height=%22200%22/><text fill=%22%23c8b488%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22>Err</text></svg>'" />
             <div class="meta">
                 <span class="dims">${p.width}×${p.height}</span>
                 <span class="rating ${p.rating}">${p.rating || '?'}</span>
             </div>
             <div class="tags">${(p.tags || []).slice(0, 5).join(' ')}</div>
-        </div>
-    `).join('');
-    updateBottomBar();
+        </div>`).join('');
+    updateDlButton();
 }
 
 function toggleCard(id, event) {
@@ -699,28 +883,40 @@ function toggleCard(id, event) {
     if (card) card.classList.toggle('selected', selectedIds.has(id));
     const cb = card?.querySelector('.sel');
     if (cb) cb.checked = selectedIds.has(id);
-    updateBottomBar();
+    updateDlButton();
 }
 
-function selectAll() { allPosts.forEach(p => selectedIds.add(p.id)); renderGallery(); }
-function deselectAll() { selectedIds.clear(); renderGallery(); }
+function selectAllPage() {
+    allPosts.forEach(p => selectedIds.add(p.id));
+    renderGallery();
+}
 
-function updateBottomBar() {
-    const bar = document.getElementById('bottomBar');
-    document.getElementById('selectedCount').textContent = selectedIds.size;
-    bar.classList.toggle('hidden', selectedIds.size === 0);
+function deselectAll() {
+    selectedIds.clear();
+    renderGallery();
+}
+
+function updateDlButton() {
+    const dlBtn = document.getElementById('dlBtn');
+    const dlBar = document.getElementById('downloadBar');
+    const dlCountNum = document.getElementById('dlCountNum');
+    const hasSel = selectedIds.size > 0;
+    if (dlBtn) {
+        dlBtn.disabled = !hasSel;
+        dlBtn.textContent = hasSel ? `⬇ Download (${selectedIds.size})` : '⬇ Download';
+    }
+    if (dlBar) dlBar.classList.toggle('hidden', !hasSel);
+    if (dlCountNum) dlCountNum.textContent = selectedIds.size;
 }
 
 // ── Download ──
 function downloadSelected() {
     if (selectedIds.size === 0) { alert('Select at least one image first.'); return; }
 
-    const bar = document.getElementById('progressBar');
-    const fill = document.getElementById('progressFill');
-    const status = document.getElementById('dlStatus');
-    bar.style.display = 'block';
-    fill.style.width = '0%';
-    status.textContent = 'Starting...';
+    const fill = document.getElementById('dlProgressFill');
+    const text = document.getElementById('dlProgressText');
+    if (fill) { fill.style.width = '0%'; }
+    if (text) { text.textContent = '0%'; }
 
     fetch('/api/download', {
         method: 'POST',
@@ -732,34 +928,36 @@ function downloadSelected() {
         if (data.error) throw new Error(data.error);
         pollProgress(data.download_id);
     })
-    .catch(e => { status.textContent = 'Error: ' + e.message; });
+    .catch(e => {
+        if (text) text.textContent = 'Error: ' + e.message;
+    });
 }
 
 function pollProgress(dlId) {
-    currentDlId = dlId;
-    const fill = document.getElementById('progressFill');
-    const status = document.getElementById('dlStatus');
-    const bar = document.getElementById('progressBar');
+    activeDlId = dlId;
+    const fill = document.getElementById('dlProgressFill');
+    const text = document.getElementById('dlProgressText');
 
     const interval = setInterval(() => {
         fetch('/api/download/' + dlId)
             .then(r => r.json())
             .then(prog => {
                 const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
-                fill.style.width = pct + '%';
-                status.textContent = `${prog.done}/${prog.total} done`;
+                if (fill) fill.style.width = pct + '%';
+                if (text) text.textContent = `${prog.done}/${prog.total}`;
                 if (prog.status === 'complete') {
                     clearInterval(interval);
-                    const failInfo = prog.failed > 0 ? `, ${prog.failed} failed` : '';
-                    status.textContent = `✓ Done (${prog.skipped} skipped${failInfo})`;
-                    status.style.color = prog.failed > 0 ? '#f59e0b' : '#16a34a';
+                    const failInfo = prog.failed > 0 ? `, ${prog.failed} fail` : '';
+                    if (text) {
+                        text.textContent = `✓ Done (${prog.skipped} skip${failInfo})`;
+                        text.style.color = prog.failed > 0 ? '#c88a1a' : '#3a7840';
+                    }
                     setTimeout(() => {
-                        bar.style.display = 'none';
-                        status.textContent = '';
-                        status.style.color = '';
+                        if (fill) { fill.style.width = '0%'; }
+                        if (text) { text.textContent = '0%'; text.style.color = ''; }
                         selectedIds.clear();
                         renderGallery();
-                    }, 3000);
+                    }, 3500);
                 }
             });
     }, 800);
@@ -774,8 +972,8 @@ function toggleFile(name, checked) {
 function selectAllFiles() {
     document.querySelectorAll('#fileList input[type="checkbox"]').forEach(cb => {
         cb.checked = true;
-        const name = cb.closest('.file-item').dataset.name;
-        if (name) selectedFileNames.add(name);
+        const n = cb.closest('.file-item')?.dataset.name;
+        if (n) selectedFileNames.add(n);
     });
 }
 
@@ -793,11 +991,10 @@ function deleteFile(name) {
 }
 
 function deleteSelectedFiles() {
-    if (selectedFileNames.size === 0) { alert('Select files first.'); return; }
+    if (!selectedFileNames.size) { alert('Select files first.'); return; }
     if (!confirm('Delete ' + selectedFileNames.size + ' files?')) return;
     fetch('/api/files/delete_batch', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({names: Array.from(selectedFileNames)})
     })
     .then(r => r.json())
@@ -809,12 +1006,6 @@ function deleteSelectedFiles() {
 function openSettings() {
     document.getElementById('settingsOverlay').classList.add('open');
     loadSettings();
-    fetch('/api/status').then(r => r.json()).then(s => {
-        document.getElementById('cfgCredentials').value = '';
-        document.getElementById('cfgCredentials').placeholder = s.configured
-            ? `Configured (user_id ends in ...${s.user_id}) — enter new value to replace`
-            : '&api_key=...&user_id=...';
-    });
 }
 
 function closeSettings() {
@@ -837,8 +1028,7 @@ function saveConfig() {
     if (download_dir) body.download_dir = download_dir;
 
     fetch('/api/config', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(body)
     })
     .then(r => r.json())
