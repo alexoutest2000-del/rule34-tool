@@ -100,6 +100,16 @@ class Rule34API:
         })
         self._last_request = 0.0
 
+    @classmethod
+    def from_credentials(cls, credentials: str, delay: float = 1.0, timeout: int = 30):
+        """Parse &api_key=...&user_id=... into separate fields."""
+        import urllib.parse
+        params = urllib.parse.parse_qsl(credentials.lstrip("&"))
+        parsed = dict(params)
+        api_key = parsed.get("api_key", "")
+        user_id = parsed.get("user_id", "")
+        return cls(user_id=user_id, api_key=api_key, delay=delay, timeout=timeout)
+
     def _rate_limit(self):
         """Enforce minimum delay between API calls."""
         elapsed = time.monotonic() - self._last_request
@@ -110,14 +120,15 @@ class Rule34API:
     def _get(self, params: dict) -> list[dict]:
         """Make an authenticated GET request to the API.
 
+        Passes credentials as &api_key=...&user_id=... (rule34.xxx format).
         Returns parsed JSON list (the API returns a flat array).
         """
         params.setdefault("page", "dapi")
         params.setdefault("s", "post")
         params.setdefault("q", "index")
         params.setdefault("json", "1")
-        params["user_id"] = self.user_id
         params["api_key"] = self.api_key
+        params["user_id"] = self.user_id
 
         self._rate_limit()
 
