@@ -277,6 +277,31 @@ def api_tag_suggestions():
     return jsonify(suggestions)
 
 
+@app.route("/api/test-connection", methods=["POST"])
+def api_test_connection():
+    """Test the API credentials by making a simple authenticated request."""
+    data = request.get_json(force=True) if request.is_json else {}
+    credentials = data.get("credentials", "").strip()
+
+    if not credentials:
+        return jsonify({"ok": False, "error": "No credentials provided"}), 400
+
+    try:
+        test_api = Rule34API.from_credentials(
+            credentials,
+            delay=cfg.delay if cfg else 1.0,
+            timeout=cfg.timeout if cfg else 30,
+        )
+        # Do a single lightweight search for 1 result
+        posts = test_api.search(["1girl"], limit=1, page=0)
+        if posts:
+            return jsonify({"ok": True, "message": f"Connected! User: ...{test_api.user_id[-4:]}, got {len(posts)} result."})
+        else:
+            return jsonify({"ok": True, "message": f"Connected as ...{test_api.user_id[-4:]} (no results for test query — this is normal)"})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 200
+
+
 # ─── UI ───────────────────────────────────────────────────────
 
 INDEX_HTML = """<!DOCTYPE html>
@@ -501,6 +526,10 @@ body {
     padding: 14px 20px; border-top: 1px solid #d4c4a8;
     display: flex; justify-content: flex-end; gap: 10px;
 }
+.settings-footer button.test-btn {
+    background: #f0e6d4; border-color: #c8b488; color: #5a4030; margin-right: auto;
+}
+.settings-footer button.test-btn:hover { background: #e8dece; }
 .status-msg { padding: 6px 0; font-size: 0.8rem; min-height: 20px; }
 .status-msg.ok { color: #3a7840; }
 .status-msg.err { color: #c83020; }
@@ -594,6 +623,7 @@ body {
             <div class="status-msg" id="cfgStatus"></div>
         </div>
         <div class="settings-footer">
+            <button class="test-btn" onclick="testConnection()">Test Connection</button>
             <button onclick="closeSettings()">Cancel</button>
             <button class="primary" onclick="saveConfig()">Save Settings</button>
         </div>
@@ -1044,6 +1074,46 @@ function saveConfig() {
     })
     .catch(e => {
         statusEl.textContent = 'Error: ' + e.message;
+        statusEl.className = 'status-msg err';
+    });
+}
+
+function testConnection() {
+    const credentials = document.getElementById('cfgCredentials').value.trim();
+    const statusEl = document.getElementById('cfgStatus');
+    const btn = document.querySelector('.test-btn');
+
+    if (!credentials) {
+        statusEl.textContent = '⚠ Enter API credentials first.';
+        statusEl.className = 'status-msg err';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Testing...';
+    statusEl.textContent = 'Testing connection...';
+    statusEl.className = 'status-msg';
+
+    fetch('/api/test-connection', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({credentials})
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.textContent = 'Test Connection';
+        if (data.ok) {
+            statusEl.textContent = '✓ ' + data.message;
+            statusEl.className = 'status-msg ok';
+        } else {
+            statusEl.textContent = '✗ ' + (data.error || 'Connection failed');
+            statusEl.className = 'status-msg err';
+        }
+    })
+    .catch(e => {
+        btn.disabled = false;
+        btn.textContent = 'Test Connection';
+        statusEl.textContent = '✗ Error: ' + e.message;
         statusEl.className = 'status-msg err';
     });
 }
