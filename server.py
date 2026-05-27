@@ -543,15 +543,28 @@ body {
     <div class="autocomplete-wrap" style="flex:1;min-width:220px;position:relative">
         <div class="tag-area" id="tagArea" onclick="focusTagInput()">
             <!-- tag chips injected here -->
-            <input type="text" id="tagInput" placeholder="Type tags..." autofocus autocomplete="off" />
+            <input type="text" id="tagInput" placeholder="Type tags and press Enter..." autofocus autocomplete="off" />
         </div>
         <div class="tag-suggestions" id="tagSuggestions"></div>
     </div>
-    <input type="number" id="limitInput" value="100" min="1" max="1000" title="Results per page" style="width:70px;padding:9px" />
-    <button onclick="selectAllPage()">Select Page</button>
-    <button onclick="deselectAll()">Deselect</button>
-    <button class="primary" id="dlBtn" onclick="downloadSelected()" disabled>⬇ Download</button>
+    <button class="primary" id="searchBtn" onclick="doSearch()">🔍 Search</button>
     <button class="icon-btn" onclick="openSettings()">⚙</button>
+</div>
+
+<!-- Selection bar (visible after search) -->
+<div class="download-bar hidden" id="selectionBar">
+    <div class="dl-count"><strong id="selCountNum">0</strong> results &nbsp;|&nbsp; <strong id="selPageNum">0</strong> selected</div>
+    <div class="dl-progress-wrap">
+        <select id="limitInput" style="width:80px;padding:6px;font-size:0.8rem;border:1px solid #c8b488;border-radius:6px;">
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+        </select>
+    </div>
+    <button onclick="selectAllPage()">Select All</button>
+    <button onclick="deselectAll()">Deselect</button>
+    <button class="primary" id="dlBtn" onclick="downloadSelected()" disabled>⬇ Download (<span id="dlCount">0</span>)</button>
 </div>
 
 <!-- Download bar (visible when items selected) -->
@@ -639,6 +652,8 @@ let currentTab = 'search';
 let activeDlId = null;
 let tagSuggestions = [];
 let highlightedSuggestion = -1;
+let searchDone = false;
+let currentTags = [];
 
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
@@ -708,7 +723,7 @@ function setupTagInput() {
         if (input2) {
             input2.value = currentTags.join(' ');
         }
-        updateDlButton();
+        updateSelCount();
     }
 
     input.addEventListener('input', (e) => {
@@ -733,7 +748,7 @@ function setupTagInput() {
         const newInput = document.getElementById('tagInput');
         newInput.value = incomplete;
         newInput.focus();
-        updateDlButton();
+        updateSelCount();
 
         if (incomplete.length >= 2) {
             fetchSuggestions(incomplete);
@@ -760,7 +775,7 @@ function setupTagInput() {
             newInput.value = '';
             renderChips();
             closeSuggestions();
-            if (currentTags.length > 0) search();
+            doSearch();
         } else if (e.key === 'Backspace' && val === '' && currentTags.length > 0) {
             currentTags.pop();
             renderChips();
@@ -794,7 +809,7 @@ function renderChips() {
     const input = document.getElementById('tagInput');
     input.focus();
     setupTagInput();
-    updateDlButton();
+    updateSelCount();
 }
 
 function addTag(tag) {
@@ -862,27 +877,45 @@ function switchTab(tab) {
 }
 
 // ── Search ──
-function search() {
+function doSearch() {
     if (!currentTags.length) return;
-    const limit = document.getElementById('limitInput')?.value || 100;
+    const limit = parseInt(document.getElementById('limitInput')?.value) || 100;
 
     document.getElementById('statusBar').textContent = 'Searching...';
     document.getElementById('gallery').innerHTML = '<div class="loading">Searching...</div>';
 
-    fetch(`/api/search?tags=${encodeURIComponent(tags.join(' '))}&limit=${limit}`)
+    fetch(`/api/search?tags=${encodeURIComponent(currentTags.join(' '))}&limit=${limit}`)
         .then(r => r.json())
         .then(posts => {
             if (posts.error) throw new Error(posts.error);
             allPosts = posts;
             selectedIds.clear();
+            searchDone = true;
             renderGallery();
             const msg = posts.length === 0 ? 'No results' : `${posts.length} results`;
             document.getElementById('statusBar').textContent = `${msg} for "${currentTags.join(' ')}"`;
+            document.getElementById('selCountNum').textContent = posts.length;
+            document.getElementById('selectionBar').classList.remove('hidden');
+            updateSelCount();
         })
         .catch(e => {
             document.getElementById('gallery').innerHTML = `<div class="empty"><p>Error: ${e.message}</p></div>`;
             document.getElementById('statusBar').textContent = 'Search failed.';
         });
+}
+
+function updateSelCount() {
+    if (!searchDone) return;
+    const selPageNum = document.getElementById('selPageNum');
+    const dlCount = document.getElementById('dlCount');
+    const dlBtn = document.getElementById('dlBtn');
+    const dlBar = document.getElementById('downloadBar');
+    const dlCountNum = document.getElementById('dlCountNum');
+    if (selPageNum) selPageNum.textContent = selectedIds.size;
+    if (dlCount) dlCount.textContent = selectedIds.size;
+    if (dlBtn) dlBtn.disabled = selectedIds.size === 0;
+    if (dlBar) dlBar.classList.toggle('hidden', selectedIds.size === 0);
+    if (dlCountNum) dlCountNum.textContent = selectedIds.size;
 }
 
 function renderGallery() {
@@ -902,7 +935,7 @@ function renderGallery() {
             </div>
             <div class="tags">${(p.tags || []).slice(0, 5).join(' ')}</div>
         </div>`).join('');
-    updateDlButton();
+    updateSelCount();
 }
 
 function toggleCard(id, event) {
@@ -912,30 +945,23 @@ function toggleCard(id, event) {
     if (card) card.classList.toggle('selected', selectedIds.has(id));
     const cb = card?.querySelector('.sel');
     if (cb) cb.checked = selectedIds.has(id);
-    updateDlButton();
+    updateSelCount();
+    const dlBar = document.getElementById('downloadBar');
+    const dlCountNum = document.getElementById('dlCountNum');
+    if (dlBar) dlBar.classList.toggle('hidden', selectedIds.size === 0);
+    if (dlCountNum) dlCountNum.textContent = selectedIds.size;
 }
 
 function selectAllPage() {
     allPosts.forEach(p => selectedIds.add(p.id));
     renderGallery();
+    updateSelCount();
 }
 
 function deselectAll() {
     selectedIds.clear();
     renderGallery();
-}
-
-function updateDlButton() {
-    const dlBtn = document.getElementById('dlBtn');
-    const dlBar = document.getElementById('downloadBar');
-    const dlCountNum = document.getElementById('dlCountNum');
-    const hasSel = selectedIds.size > 0;
-    if (dlBtn) {
-        dlBtn.disabled = !hasSel;
-        dlBtn.textContent = hasSel ? `⬇ Download (${selectedIds.size})` : '⬇ Download';
-    }
-    if (dlBar) dlBar.classList.toggle('hidden', !hasSel);
-    if (dlCountNum) dlCountNum.textContent = selectedIds.size;
+    updateSelCount();
 }
 
 // ── Download ──

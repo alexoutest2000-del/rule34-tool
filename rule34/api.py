@@ -218,8 +218,8 @@ class Rule34API:
         return None
 
     def tag_suggestions(self, prefix: str, limit: int = 10) -> list[str]:
-        """Fetch tag suggestions matching a prefix."""
-        import urllib.parse
+        """Fetch tag suggestions matching a prefix (wildcard search)."""
+        import xml.etree.ElementTree as ET
         params = {
             "page": "dapi",
             "s": "tag",
@@ -227,17 +227,27 @@ class Rule34API:
             "name": prefix,
             "limit": limit,
         }
-        # Tags endpoint doesn't need auth
-        bare_params = {k: v for k, v in params.items()}
-        resp = self.session.get(
-            API_BASE,
-            params=bare_params,
-            timeout=self.timeout,
-        )
-        if resp.status_code == 403:
+        try:
+            resp = self.session.get(
+                API_BASE,
+                params=params,
+                timeout=self.timeout,
+            )
+            if resp.status_code == 403:
+                return []
+            resp.raise_for_status()
+        except Exception:
             return []
-        resp.raise_for_status()
-        data = resp.json()
-        if not isinstance(data, list):
+
+        try:
+            root = ET.fromstring(resp.text)
+            return [tag.get("name", "") for tag in root.findall("tag") if tag.get("name")]
+        except ET.ParseError:
+            # Fallback: try JSON in case API behavior changes
+            try:
+                data = resp.json()
+                if isinstance(data, list):
+                    return [item.get("name", "") for item in data if item.get("name")]
+            except Exception:
+                pass
             return []
-        return [item.get("name", "") for item in data if item.get("name")]
