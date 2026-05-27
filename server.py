@@ -542,9 +542,8 @@ body {
 <div class="topbar">
     <h1>🔞</h1>
     <div class="autocomplete-wrap" style="flex:1;min-width:220px;position:relative">
-        <div class="tag-area" id="tagArea" onclick="focusTagInput()">
-            <!-- tag chips injected here -->
-            <input type="text" id="tagInput" placeholder="Type tags and press Enter..." autofocus autocomplete="off" />
+        <div class="tag-area" id="tagArea">
+            <input type="text" id="tagInput" placeholder="Type tags..." autofocus autocomplete="off" />
         </div>
         <div class="tag-suggestions" id="tagSuggestions"></div>
     </div>
@@ -555,14 +554,6 @@ body {
 <!-- Selection bar (visible after search) -->
 <div class="download-bar hidden" id="selectionBar">
     <div class="dl-count"><strong id="selCountNum">0</strong> results &nbsp;|&nbsp; <strong id="selPageNum">0</strong> selected</div>
-    <div class="dl-progress-wrap">
-        <select id="limitInput" style="width:80px;padding:6px;font-size:0.8rem;border:1px solid #c8b488;border-radius:6px;">
-            <option value="50">50</option>
-            <option value="100" selected>100</option>
-            <option value="200">200</option>
-            <option value="500">500</option>
-        </select>
-    </div>
     <button onclick="selectAllPage()">Select All</button>
     <button onclick="deselectAll()">Deselect</button>
     <button class="primary" id="dlBtn" onclick="downloadSelected()" disabled>⬇ Download (<span id="dlCount">0</span>)</button>
@@ -671,7 +662,6 @@ console.error = function(...args) { _origLog.apply(console, args); debug('ERROR:
 
 <script>
 // ── State ──
-let allPosts = [];
 let selectedIds = new Set();
 let selectedFileNames = new Set();
 let currentTab = 'search';
@@ -761,44 +751,24 @@ function formatSize(b) {
 }
 
 // ── Tag Input System ──
-function setupTagInput() {
-    const input = document.getElementById('tagInput');
-    const area = document.getElementById('tagArea');
+let _tagInputSetup = false;
 
-    function syncFromTags() {
-        currentTags = currentTags.filter(Boolean);
-        const input2 = document.getElementById('tagInput');
-        if (input2) {
-            input2.value = currentTags.join(' ');
-        }
-        updateSelCount();
-    }
+function setupTagInput() {
+    if (_tagInputSetup) return;
+    _tagInputSetup = true;
+    const input = document.getElementById('tagInput');
+    if (!input) return;
 
     input.addEventListener('input', (e) => {
-        const val = input.value.trim();
-        const lastSpace = val.lastIndexOf(' ');
-        const current = val.slice(lastSpace + 1);
-
-        // Sync currentTags: treat trailing word as current input
+        const val = input.value;
         const parts = val.split(/\\s+/);
         console.log('[input] val:', JSON.stringify(val), 'parts:', JSON.stringify(parts));
         currentTags = parts.slice(0, -1).filter(Boolean);
         const incomplete = parts[parts.length - 1] || '';
         console.log('[input] currentTags:', JSON.stringify(currentTags), 'incomplete:', JSON.stringify(incomplete));
 
-        // Render chips for completed tags
-        let chipsHtml = currentTags.map(t => `
-            <div class="tag-chip">
-                <span>${esc(t)}</span>
-                <span class="remove-tag" onclick="event.stopPropagation(); currentTags=currentTags.filter(x=>x!=='${esc(t)}'); renderChips();">X</span>
-            </div>`).join('');
-
-        // Put the chip area + input back
-        area.innerHTML = chipsHtml + `<input type="text" id="tagInput" placeholder="" autofocus autocomplete="off" />`;
-        const newInput = document.getElementById('tagInput');
-        newInput.value = incomplete;
-        newInput.focus();
-        updateSelCount();
+        // Update chips without destroying input
+        renderChipsOnly();
 
         if (incomplete.length >= 2) {
             fetchSuggestions(incomplete);
@@ -808,31 +778,37 @@ function setupTagInput() {
     });
 
     input.addEventListener('keydown', (e) => {
-        const newInput = document.getElementById('tagInput');
-        const val = newInput.value.trim();
+        const val = input.value.trim();
         console.log('[keydown] key:', e.key, 'val:', JSON.stringify(val), 'currentTags:', JSON.stringify(currentTags));
 
         if (e.key === ' ') {
+            // Space commits the current word as a tag
             e.preventDefault();
-            if (val) {
-                console.log('[keydown] SPACE: adding tag', val);
-                addTag(val);
-                newInput.value = '';
-                renderChips();
+            const word = val.replace(/\\s+/g, '_');
+            if (word) {
+                console.log('[keydown] SPACE: adding tag', word);
+                addTag(word);
+                input.value = '';
+                if (!currentTags.includes(word)) currentTags.push(word);
+                renderChipsOnly();
+                updateSelCount();
             }
             closeSuggestions();
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            console.log('[keydown] ENTER: adding tag' + (val ? ' ' + val : '') + ', then searching...');
-            if (val) addTag(val);
-            newInput.value = '';
-            renderChips();
+            console.log('[keydown] ENTER');
+            if (val) {
+                addTag(val);
+                input.value = '';
+            }
+            renderChipsOnly();
             closeSuggestions();
             console.log('[keydown] ENTER: currentTags=', JSON.stringify(currentTags));
             doSearch();
         } else if (e.key === 'Backspace' && val === '' && currentTags.length > 0) {
             currentTags.pop();
-            renderChips();
+            renderChipsOnly();
+            updateSelCount();
         } else if (e.key === 'ArrowDown') {
             e.preventDefault();
             if (tagSuggestions.length) {
@@ -849,21 +825,39 @@ function setupTagInput() {
             closeSuggestions();
         }
     });
+
+    // Click on tag area focuses the input
+    document.getElementById('tagArea').addEventListener('click', () => {
+        document.getElementById('tagInput').focus();
+    });
 }
 
-function renderChips() {
+// Render only the chip elements BEFORE the input (don't touch the input)
+function renderChipsOnly() {
     const area = document.getElementById('tagArea');
-    let html = currentTags.map(t => `
-        <div class="tag-chip">
-            <span>${esc(t)}</span>
-            <span class="remove-tag" onclick="event.stopPropagation(); currentTags=currentTags.filter(x=>x!=='${esc(t)}'); renderChips();">X</span>
-        </div>`).join('');
-    html += `<input type="text" id="tagInput" placeholder="" autofocus autocomplete="off" />`;
-    area.innerHTML = html;
     const input = document.getElementById('tagInput');
-    input.focus();
-    setupTagInput();
-    updateSelCount();
+    // Remove existing chips (any .tag-chip elements)
+    area.querySelectorAll('.tag-chip').forEach(el => el.remove());
+    // Insert fresh chips before the input
+    currentTags.forEach(t => {
+        const chip = document.createElement('div');
+        chip.className = 'tag-chip';
+        chip.innerHTML = `<span>${esc(t)}</span><span class="remove-tag">X</span>`;
+        chip.querySelector('.remove-tag').addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            currentTags = currentTags.filter(x => x !== t);
+            renderChipsOnly();
+            updateSelCount();
+        });
+        area.insertBefore(chip, input);
+    });
+}
+
+// Called by doSearch / other places that need full chip+input reset
+function renderChips() {
+    const input = document.getElementById('tagInput');
+    if (input) input.value = '';
+    renderChipsOnly();
 }
 
 function addTag(tag) {
@@ -935,12 +929,16 @@ function switchTab(tab) {
 }
 
 // ── Search ──
+let allPosts = [];       // ALL fetched posts (unlimited)
+let currentPage = 0;
+const PAGE_SIZE = 50;
+
 function doSearch() {
     // Grab any pending text from the input field and add it as a tag
     const input = document.getElementById('tagInput');
     if (input && input.value.trim()) {
         addTag(input.value.trim());
-        renderChips();  // this also calls setupTagInput() which rebinds listeners
+        renderChips();
     }
     console.log('[doSearch] currentTags:', JSON.stringify(currentTags), 'length:', currentTags.length);
     if (!currentTags.length) {
@@ -948,25 +946,24 @@ function doSearch() {
         document.getElementById('statusBar').textContent = 'No tags entered. Type a tag and press Enter or click Search.';
         return;
     }
-    const limit = parseInt(document.getElementById('limitInput')?.value) || 100;
-    const url = `/api/search?tags=${encodeURIComponent(currentTags.join(' '))}&limit=${limit}`;
-    console.log('[doSearch] fetching:', url);
 
-    document.getElementById('statusBar').textContent = 'Searching...';
+    document.getElementById('statusBar').textContent = 'Searching (fetching all results)...';
     document.getElementById('gallery').innerHTML = '<div class="loading">Searching...</div>';
 
+    // Fetch ALL results (up to 5000) via search_all
+    const url = `/api/search_all?tags=${encodeURIComponent(currentTags.join(' '))}&max=5000`;
+    console.log('[doSearch] fetching:', url);
+
     fetch(url)
-        .then(r => {
-            console.log('[doSearch] response status:', r.status);
-            return r.json();
-        })
+        .then(r => r.json())
         .then(posts => {
             console.log('[doSearch] got posts:', Array.isArray(posts) ? posts.length : typeof posts, posts.error || '');
             if (posts.error) throw new Error(posts.error);
             allPosts = posts;
+            currentPage = 0;
             selectedIds.clear();
             searchDone = true;
-            renderGallery();
+            renderPage();
             const msg = posts.length === 0 ? 'No results' : `${posts.length} results`;
             document.getElementById('statusBar').textContent = `${msg} for "${currentTags.join(' ')}"`;
             document.getElementById('selCountNum').textContent = posts.length;
@@ -978,6 +975,43 @@ function doSearch() {
             document.getElementById('gallery').innerHTML = `<div class="empty"><p>Error: ${e.message}</p></div>`;
             document.getElementById('statusBar').textContent = 'Search failed.';
         });
+}
+
+function renderPage() {
+    const start = currentPage * PAGE_SIZE;
+    const page = allPosts.slice(start, start + PAGE_SIZE);
+    const gallery = document.getElementById('gallery');
+    const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
+
+    if (!page.length) {
+        gallery.innerHTML = '<div class="empty"><p>No results on this page</p></div>';
+        return;
+    }
+
+    let html = '';
+    if (totalPages > 1) {
+        html += `<div style="grid-column:1/-1;display:flex;gap:8px;align-items:center;padding:4px 0;font-size:0.82rem;color:#8a7050">
+            <button onclick="currentPage=Math.max(0,currentPage-1);renderPage();window.scrollTo(0,0);" ${currentPage===0?'disabled':''} style="font-size:0.8rem">◀ Prev</button>
+            <span>Page ${currentPage+1} of ${totalPages}</span>
+            <button onclick="currentPage=Math.min(${totalPages-1},currentPage+1);renderPage();window.scrollTo(0,0);" ${currentPage>=totalPages-1?'disabled':''} style="font-size:0.8rem">Next ▶</button>
+            <span style="margin-left:auto">${allPosts.length} total</span>
+        </div>`;
+    }
+
+    html += page.map(p => `
+        <div class="card${selectedIds.has(p.id) ? ' selected' : ''}" data-id="${p.id}" onclick="toggleCard(${p.id}, event)">
+            <input type="checkbox" class="sel" ${selectedIds.has(p.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleCard(${p.id}, event)" />
+            <img class="thumb" src="${p.preview_url}" alt="Post ${p.id}" loading="lazy"
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%23f0e6d4%22 width=%22200%22 height=%22200%22/><text fill=%22%23c8b488%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22>Err</text></svg>'" />
+            <div class="meta">
+                <span class="dims">${p.width}×${p.height}</span>
+                <span class="rating ${p.rating}">${p.rating || '?'}</span>
+            </div>
+            <div class="tags">${(p.tags || []).slice(0, 5).join(' ')}</div>
+        </div>`).join('');
+
+    gallery.innerHTML = html;
+    updateSelCount();
 }
 
 function updateSelCount() {
@@ -992,26 +1026,6 @@ function updateSelCount() {
     if (dlBtn) dlBtn.disabled = selectedIds.size === 0;
     if (dlBar) dlBar.classList.toggle('hidden', selectedIds.size === 0);
     if (dlCountNum) dlCountNum.textContent = selectedIds.size;
-}
-
-function renderGallery() {
-    const gallery = document.getElementById('gallery');
-    if (!allPosts.length) {
-        gallery.innerHTML = '<div class="empty"><p>No results found</p></div>';
-        return;
-    }
-    gallery.innerHTML = allPosts.map(p => `
-        <div class="card${selectedIds.has(p.id) ? ' selected' : ''}" data-id="${p.id}" onclick="toggleCard(${p.id}, event)">
-            <input type="checkbox" class="sel" ${selectedIds.has(p.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleCard(${p.id}, event)" />
-            <img class="thumb" src="${p.preview_url}" alt="Post ${p.id}" loading="lazy"
-                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%23f0e6d4%22 width=%22200%22 height=%22200%22/><text fill=%22%23c8b488%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22>Err</text></svg>'" />
-            <div class="meta">
-                <span class="dims">${p.width}×${p.height}</span>
-                <span class="rating ${p.rating}">${p.rating || '?'}</span>
-            </div>
-            <div class="tags">${(p.tags || []).slice(0, 5).join(' ')}</div>
-        </div>`).join('');
-    updateSelCount();
 }
 
 function toggleCard(id, event) {
@@ -1029,14 +1043,15 @@ function toggleCard(id, event) {
 }
 
 function selectAllPage() {
+    // Select all posts across ALL pages
     allPosts.forEach(p => selectedIds.add(p.id));
-    renderGallery();
+    renderPage();
     updateSelCount();
 }
 
 function deselectAll() {
     selectedIds.clear();
-    renderGallery();
+    renderPage();
     updateSelCount();
 }
 
