@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 import yaml
 
 
-DEFAULT_CONFIG_PATH = Path.home() / ".config" / "rule34-tool" / "config.yaml"
+DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.yaml"  # project root
 
 
 @dataclass

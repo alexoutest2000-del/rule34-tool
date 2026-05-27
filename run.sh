@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-CONFIG_FILE="$HOME/.config/rule34-tool/config.yaml"
+CONFIG_FILE="$SCRIPT_DIR/config.yaml"
 VENV_DIR="$SCRIPT_DIR/.venv"
 PORT="${PORT:-8010}"
 
@@ -46,7 +46,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
     read -rp "  user_id: " USER_ID
     read -rp "  api_key: " API_KEY
 
-    mkdir -p "$(dirname "$CONFIG_FILE")"
+    mkdir -p "$SCRIPT_DIR"
     cat > "$CONFIG_FILE" << YAMLEOF
 credentials: "&api_key=${API_KEY}&user_id=${USER_ID}"
 delay: 1.0
