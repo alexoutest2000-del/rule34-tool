@@ -761,6 +761,23 @@ window.addEventListener('DOMContentLoaded', () => {
     loadSettings();
     setupTagInput();
     console.log('[init] setupTagInput done. currentTags:', JSON.stringify(currentTags));
+
+    // Preview delegation on gallery
+    const gallery = document.getElementById('gallery');
+    gallery.addEventListener('mouseover', (e) => {
+        const card = e.target.closest('.card');
+        if (card) {
+            const url = card.dataset.file;
+            const ext = card.dataset.ext;
+            if (url) showPreview(url, ext);
+        }
+    });
+    gallery.addEventListener('mouseout', (e) => {
+        const card = e.target.closest('.card');
+        if (card && !card.contains(e.relatedTarget)) {
+            hidePreview();
+        }
+    });
 });
 
 function loadStatus() {
@@ -1117,8 +1134,6 @@ function renderPage() {
     html += page.map(p => `
         <div class="card${selectedIds.has(p.id) ? ' selected' : ''}" data-id="${p.id}"
              data-file="${esc(p.file_url)}" data-ext="${esc(p.ext)}"
-             onmouseenter="showPreview('${esc(p.file_url)}','${esc(p.ext)}')"
-             onmouseleave="hidePreview()"
              onclick="toggleCard(${p.id}, event)">
             <input type="checkbox" class="sel" ${selectedIds.has(p.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleCard(${p.id}, event)" />
             <img class="thumb" src="${p.preview_url}" alt="Post ${p.id}" loading="lazy"
