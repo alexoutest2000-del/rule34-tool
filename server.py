@@ -616,6 +616,9 @@ body {
             <button class="close-btn" onclick="closeSettings()">✕</button>
         </div>
         <div class="settings-body">
+            <div id="apiStatusBanner" style="padding:10px 14px;border-radius:8px;font-size:0.82rem;margin-bottom:4px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;">
+                ⚠ API not configured. Paste your credentials below.
+            </div>
             <div>
                 <label>API Credentials (rule34.xxx format)</label>
                 <input type="text" id="cfgCredentials" placeholder="&api_key=...&user_id=..." />
@@ -667,10 +670,16 @@ function loadStatus() {
     fetch('/api/status')
         .then(r => r.json())
         .then(s => {
-            document.querySelector('.topbar h1').textContent = s.configured ? '🔞' : '🔞⚠';
-            document.querySelector('.topbar h1').title = s.configured
-                ? `Logged in as ...${s.user_id}`
-                : 'Not configured — click ⚙';
+            const h1 = document.querySelector('.topbar h1');
+            if (s.configured) {
+                h1.textContent = '🔞';
+                h1.title = `Logged in as ...${s.user_id}`;
+            } else {
+                h1.textContent = '⚠️';
+                h1.title = 'Not configured — click ⚙ to set API credentials';
+                h1.style.cursor = 'pointer';
+                h1.onclick = () => openSettings();
+            }
         }).catch(() => {});
 }
 
@@ -679,9 +688,22 @@ function loadSettings() {
         document.getElementById('cfgDelay').value = s.delay;
         document.getElementById('cfgTimeout').value = s.timeout;
         document.getElementById('cfgDownloadDir').value = s.download_dir;
-        document.getElementById('cfgCredentials').placeholder = s.configured
-            ? `Configured (...${s.user_id}) — enter new value to replace`
-            : '&api_key=...&user_id=...';
+        const credsInput = document.getElementById('cfgCredentials');
+        const banner = document.getElementById('apiStatusBanner');
+        if (s.configured) {
+            credsInput.placeholder = `Configured (...${s.user_id}) — enter new value to replace`;
+            credsInput.value = '';
+            banner.style.background = '#ecfdf5';
+            banner.style.border = '1px solid #16a34a';
+            banner.style.color = '#065f46';
+            banner.innerHTML = `✓ API connected as ...${s.user_id} (${s.download_count} files downloaded)`;
+        } else {
+            credsInput.placeholder = '&api_key=...&user_id=...';
+            banner.style.background = '#fef3c7';
+            banner.style.border = '1px solid #f59e0b';
+            banner.style.color = '#92400e';
+            banner.innerHTML = '⚠ API not configured. Paste your credentials below.';
+        }
     });
 }
 
@@ -1091,6 +1113,7 @@ function saveConfig() {
         if (data.configured) {
             statusEl.textContent = '✓ Settings saved. API connected.';
             statusEl.className = 'status-msg ok';
+            loadSettings();
             loadStatus();
             setTimeout(closeSettings, 1500);
         } else {
@@ -1131,6 +1154,7 @@ function testConnection() {
         if (data.ok) {
             statusEl.textContent = '✓ ' + data.message;
             statusEl.className = 'status-msg ok';
+            loadSettings();
         } else {
             statusEl.textContent = '✗ ' + (data.error || 'Connection failed');
             statusEl.className = 'status-msg err';

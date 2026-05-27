@@ -226,6 +226,8 @@ class Rule34API:
             "q": "index",
             "name": prefix,
             "limit": limit,
+            "api_key": self.api_key,
+            "user_id": self.user_id,
         }
         try:
             resp = self.session.get(
