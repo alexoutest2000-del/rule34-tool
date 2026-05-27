@@ -39,21 +39,14 @@ if [ "$NEED_INSTALL" -eq 1 ]; then
 fi
 
 if [ ! -f "$CONFIG_FILE" ]; then
-    echo "→ First run — configure API credentials"
-    echo "  Get your user_id and api_key from:"
-    echo "  https://rule34.xxx/index.php?page=account&s=options"
-    echo ""
-    read -rp "  user_id: " USER_ID
-    read -rp "  api_key: " API_KEY
-
-    mkdir -p "$SCRIPT_DIR"
+    echo "→ No config found — creating empty template."
+    echo "  Open http://localhost:${PORT} and click ⚙ Settings to enter API credentials."
     cat > "$CONFIG_FILE" << YAMLEOF
-credentials: "&api_key=${API_KEY}&user_id=${USER_ID}"
+credentials: ""
 delay: 1.0
 download_dir: "./downloads"
 timeout: 30
 YAMLEOF
-    echo "→ Config saved to $CONFIG_FILE"
 fi
 
 # ── Run ────────────────────────────────────────────────────────
