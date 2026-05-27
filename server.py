@@ -45,8 +45,53 @@ def load_config():
             delay=cfg.delay,
             timeout=cfg.timeout,
         )
+        # Start background tag seeding if cache is small
+        if len(tag_cache) < 100:
+            import threading
+            t = threading.Thread(target=_seed_tag_cache, daemon=True)
+            t.start()
     else:
         api = None
+
+
+def _seed_tag_cache() -> None:
+    """Background thread: paginate tag listing to build the local cache."""
+    global tag_cache, api
+    if api is None:
+        return
+    assert api is not None  # type guard
+    import xml.etree.ElementTree as ET
+    import time
+
+    pages_to_fetch = 50 if len(tag_cache) == 0 else 20
+    page_size = 100
+    new_count = 0
+
+    print(f"  → Seeding tag cache (fetching up to {pages_to_fetch} pages)...")
+    for page in range(pages_to_fetch):
+        try:
+            resp = api.session.get(
+                "https://api.rule34.xxx/index.php",
+                params={
+                    "page": "dapi", "s": "tag", "q": "index",
+                    "limit": page_size, "pid": page,
+                    "api_key": api.api_key, "user_id": api.user_id,
+                },
+                timeout=api.timeout,
+            )
+            if resp.status_code != 200:
+                break
+            root = ET.fromstring(resp.text)
+            tags_on_page = [t.get("name", "") for t in root.findall("tag") if t.get("name")]
+            if not tags_on_page:
+                break
+            tag_cache = add_tags(tag_cache, tags_on_page)
+            new_count += len(tags_on_page)
+            print(f"\r  → Seed page {page + 1}/{pages_to_fetch}: cache now {len(tag_cache)} tags", end="", flush=True)
+            time.sleep(api.delay)
+        except Exception:
+            break
+    print(f"\n  → Tag cache ready: {len(tag_cache)} tags (+{new_count} new)")
 
 
 def reinit_api():
