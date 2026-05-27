@@ -65,6 +65,7 @@ def api_status():
         "configured": cfg.has_credentials if cfg else False,
         "user_id": cfg.user_id[-4:] if cfg and cfg.user_id else "",
         "api_key_masked": ("*" * 20) + cfg.api_key[-4:] if cfg and cfg.api_key else "",
+        "credentials": cfg.credentials if cfg and cfg.credentials else "",
         "download_dir": str(download_dir) if download_dir else "",
         "delay": cfg.delay if cfg else 1.0,
         "timeout": cfg.timeout if cfg else 30,
@@ -640,7 +641,7 @@ body {
         </div>
         <div class="settings-footer">
             <button class="test-btn" onclick="testConnection()">Test Connection</button>
-            <button onclick="closeSettings()">Cancel</button>
+            <button onclick="closeSettings()">Close</button>
             <button class="primary" onclick="saveConfig()">Save Settings</button>
         </div>
     </div>
@@ -691,8 +692,9 @@ function loadSettings() {
         const credsInput = document.getElementById('cfgCredentials');
         const banner = document.getElementById('apiStatusBanner');
         if (s.configured) {
-            credsInput.placeholder = `Configured (...${s.user_id}) — enter new value to replace`;
-            credsInput.value = '';
+            // Show the actual credentials so the user can see/copy them
+            credsInput.placeholder = '&api_key=...&user_id=...';
+            credsInput.value = s.credentials;
             banner.style.background = '#ecfdf5';
             banner.style.border = '1px solid #16a34a';
             banner.style.color = '#065f46';
@@ -1115,7 +1117,6 @@ function saveConfig() {
             statusEl.className = 'status-msg ok';
             loadSettings();
             loadStatus();
-            setTimeout(closeSettings, 1500);
         } else {
             statusEl.textContent = '⚠ Saved but API not configured — check credentials.';
             statusEl.className = 'status-msg err';
