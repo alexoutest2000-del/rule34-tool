@@ -647,6 +647,28 @@ body {
     </div>
 </div>
 
+<!-- Debug log (visible on page) -->
+<div id="debugLog" style="position:fixed;bottom:0;left:0;right:0;z-index:999;background:#0d0d0dee;color:#0f0;font-family:monospace;font-size:0.7rem;max-height:120px;overflow-y:auto;padding:6px 12px;border-top:1px solid #333;display:none;"></div>
+<script>
+// ── Debug helpers ──
+window._debugLog = [];
+const MAX_DEBUG = 50;
+function debug(msg) {
+    window._debugLog.push(new Date().toISOString().slice(11,23) + ' ' + msg);
+    if (window._debugLog.length > MAX_DEBUG) window._debugLog.shift();
+    const el = document.getElementById('debugLog');
+    if (el) {
+        el.style.display = 'block';
+        el.textContent = window._debugLog.join('\\n');
+        el.scrollTop = el.scrollHeight;
+    }
+}
+// Override console.log to also write to debug panel
+const _origLog = console.log;
+console.log = function(...args) { _origLog.apply(console, args); debug(args.join(' ')); };
+console.error = function(...args) { _origLog.apply(console, args); debug('ERROR: ' + args.join(' ')); };
+</script>
+
 <script>
 // ── State ──
 let allPosts = [];
@@ -661,10 +683,12 @@ let currentTags = [];
 
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('[init] Page loaded. currentTags:', JSON.stringify(currentTags));
     loadStatus();
     loadFiles();
     loadSettings();
     setupTagInput();
+    console.log('[init] setupTagInput done. currentTags:', JSON.stringify(currentTags));
 });
 
 function loadStatus() {
@@ -757,8 +781,10 @@ function setupTagInput() {
 
         // Sync currentTags: treat trailing word as current input
         const parts = val.split(/\\s+/);
+        console.log('[input] val:', JSON.stringify(val), 'parts:', JSON.stringify(parts));
         currentTags = parts.slice(0, -1).filter(Boolean);
         const incomplete = parts[parts.length - 1] || '';
+        console.log('[input] currentTags:', JSON.stringify(currentTags), 'incomplete:', JSON.stringify(incomplete));
 
         // Render chips for completed tags
         let chipsHtml = currentTags.map(t => `
@@ -784,10 +810,12 @@ function setupTagInput() {
     input.addEventListener('keydown', (e) => {
         const newInput = document.getElementById('tagInput');
         const val = newInput.value.trim();
+        console.log('[keydown] key:', e.key, 'val:', JSON.stringify(val), 'currentTags:', JSON.stringify(currentTags));
 
         if (e.key === ' ') {
             e.preventDefault();
             if (val) {
+                console.log('[keydown] SPACE: adding tag', val);
                 addTag(val);
                 newInput.value = '';
                 renderChips();
@@ -795,10 +823,12 @@ function setupTagInput() {
             closeSuggestions();
         } else if (e.key === 'Enter') {
             e.preventDefault();
+            console.log('[keydown] ENTER: adding tag' + (val ? ' ' + val : '') + ', then searching...');
             if (val) addTag(val);
             newInput.value = '';
             renderChips();
             closeSuggestions();
+            console.log('[keydown] ENTER: currentTags=', JSON.stringify(currentTags));
             doSearch();
         } else if (e.key === 'Backspace' && val === '' && currentTags.length > 0) {
             currentTags.pop();
@@ -838,8 +868,12 @@ function renderChips() {
 
 function addTag(tag) {
     tag = tag.trim().replace(/\\s+/g, '_');
+    console.log('[addTag] input:', JSON.stringify(tag), 'currentTags:', JSON.stringify(currentTags));
     if (tag && !currentTags.includes(tag)) {
         currentTags.push(tag);
+        console.log('[addTag] ADDED. currentTags now:', JSON.stringify(currentTags));
+    } else {
+        console.log('[addTag] SKIPPED (empty or duplicate)');
     }
 }
 
@@ -902,15 +936,26 @@ function switchTab(tab) {
 
 // ── Search ──
 function doSearch() {
-    if (!currentTags.length) return;
+    console.log('[doSearch] currentTags:', JSON.stringify(currentTags), 'length:', currentTags.length);
+    if (!currentTags.length) {
+        console.log('[doSearch] ABORT: no tags');
+        document.getElementById('statusBar').textContent = 'No tags entered. Type a tag and press Enter or click Search.';
+        return;
+    }
     const limit = parseInt(document.getElementById('limitInput')?.value) || 100;
+    const url = `/api/search?tags=${encodeURIComponent(currentTags.join(' '))}&limit=${limit}`;
+    console.log('[doSearch] fetching:', url);
 
     document.getElementById('statusBar').textContent = 'Searching...';
     document.getElementById('gallery').innerHTML = '<div class="loading">Searching...</div>';
 
-    fetch(`/api/search?tags=${encodeURIComponent(currentTags.join(' '))}&limit=${limit}`)
-        .then(r => r.json())
+    fetch(url)
+        .then(r => {
+            console.log('[doSearch] response status:', r.status);
+            return r.json();
+        })
         .then(posts => {
+            console.log('[doSearch] got posts:', Array.isArray(posts) ? posts.length : typeof posts, posts.error || '');
             if (posts.error) throw new Error(posts.error);
             allPosts = posts;
             selectedIds.clear();
@@ -923,6 +968,7 @@ function doSearch() {
             updateSelCount();
         })
         .catch(e => {
+            console.error('[doSearch] error:', e.message);
             document.getElementById('gallery').innerHTML = `<div class="empty"><p>Error: ${e.message}</p></div>`;
             document.getElementById('statusBar').textContent = 'Search failed.';
         });
