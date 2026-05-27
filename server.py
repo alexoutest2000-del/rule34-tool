@@ -833,8 +833,7 @@ function switchTab(tab) {
 
 // ── Search ──
 function search() {
-    const tags = getCurrentTags();
-    if (!tags.length) return;
+    if (!currentTags.length) return;
     const limit = document.getElementById('limitInput')?.value || 100;
 
     document.getElementById('statusBar').textContent = 'Searching...';
@@ -848,7 +847,7 @@ function search() {
             selectedIds.clear();
             renderGallery();
             const msg = posts.length === 0 ? 'No results' : `${posts.length} results`;
-            document.getElementById('statusBar').textContent = `${msg} for "${tags.join(' ')}"`;
+            document.getElementById('statusBar').textContent = `${msg} for "${currentTags.join(' ')}"`;
         })
         .catch(e => {
             document.getElementById('gallery').innerHTML = `<div class="empty"><p>Error: ${e.message}</p></div>`;
