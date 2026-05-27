@@ -756,7 +756,7 @@ function setupTagInput() {
         const current = val.slice(lastSpace + 1);
 
         // Sync currentTags: treat trailing word as current input
-        const parts = val.split(/\\s+/);
+        const parts = val.split(/\s+/);
         currentTags = parts.slice(0, -1).filter(Boolean);
         const incomplete = parts[parts.length - 1] || '';
 
@@ -837,7 +837,7 @@ function renderChips() {
 }
 
 function addTag(tag) {
-    tag = tag.trim().replace(/\\s+/g, '_');
+    tag = tag.trim().replace(/\s+/g, '_');
     if (tag && !currentTags.includes(tag)) {
         currentTags.push(tag);
     }
