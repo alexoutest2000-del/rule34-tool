@@ -762,7 +762,7 @@ window.addEventListener('DOMContentLoaded', () => {
     setupTagInput();
     console.log('[init] setupTagInput done. currentTags:', JSON.stringify(currentTags));
 
-    // Preview delegation on gallery
+    // Preview delegation on gallery — show on hover, close on click outside
     const gallery = document.getElementById('gallery');
     gallery.addEventListener('mouseover', (e) => {
         const card = e.target.closest('.card');
@@ -772,11 +772,16 @@ window.addEventListener('DOMContentLoaded', () => {
             if (url) showPreview(url, ext);
         }
     });
-    gallery.addEventListener('mouseout', (e) => {
-        const card = e.target.closest('.card');
-        if (card && !card.contains(e.relatedTarget)) {
+    // Click outside overlay closes it
+    document.addEventListener('click', (e) => {
+        const overlay = document.getElementById('previewOverlay');
+        if (overlay.classList.contains('show') && !e.target.closest('.card') && !e.target.closest('.preview-overlay')) {
             hidePreview();
         }
+    });
+    // Escape key also closes
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hidePreview();
     });
 });
 
