@@ -779,6 +779,14 @@ window.addEventListener('DOMContentLoaded', () => {
             hidePreview();
         }
     });
+    // Right-click anywhere closes overlay
+    document.addEventListener('contextmenu', (e) => {
+        const overlay = document.getElementById('previewOverlay');
+        if (overlay.classList.contains('show')) {
+            e.preventDefault();
+            hidePreview();
+        }
+    });
     // Escape key also closes
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') hidePreview();
