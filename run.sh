@@ -8,16 +8,34 @@ CONFIG_FILE="$HOME/.config/rule34-tool/config.yaml"
 VENV_DIR="$SCRIPT_DIR/.venv"
 PORT="${PORT:-8010}"
 
-# ── First-time setup ──────────────────────────────────────────
+# ── Kill existing instance on this port ───────────────────────
+
+OLD_PID=$(ss -tlnp "sport = :$PORT" 2>/dev/null | grep -oP 'pid=\K\d+' || true)
+if [ -n "$OLD_PID" ]; then
+    echo "→ Killing old server on port $PORT (PID $OLD_PID)..."
+    kill "$OLD_PID" 2>/dev/null || true
+    sleep 1
+fi
+
+# ── First-time / update setup ─────────────────────────────────
 
 if [ ! -d "$VENV_DIR" ]; then
     echo "→ Creating virtual environment..."
     python3 -m venv "$VENV_DIR"
 fi
 
-if ! "$VENV_DIR/bin/python" -c "import flask" 2>/dev/null; then
-    echo "→ Installing dependencies..."
+# Reinstall if requirements.txt is newer than the venv marker
+MARKER="$VENV_DIR/.requirements_hash"
+NEED_INSTALL=0
+if [ ! -f "$VENV_DIR/bin/python" ]; then
+    NEED_INSTALL=1
+elif [ ! -f "$MARKER" ] || [ requirements.txt -nt "$MARKER" ]; then
+    NEED_INSTALL=1
+fi
+if [ "$NEED_INSTALL" -eq 1 ]; then
+    echo "→ Installing/updating dependencies..."
     "$VENV_DIR/bin/pip" install -q -r requirements.txt
+    touch "$MARKER"
 fi
 
 if [ ! -f "$CONFIG_FILE" ]; then
