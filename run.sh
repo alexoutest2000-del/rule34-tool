@@ -17,7 +17,7 @@ fi
 
 if ! "$VENV_DIR/bin/python" -c "import flask" 2>/dev/null; then
     echo "→ Installing dependencies..."
-    "$VENV_DIR/bin/pip" install -q flask requests tqdm pyyaml
+    "$VENV_DIR/bin/pip" install -q -r requirements.txt
 fi
 
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -30,8 +30,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 
     mkdir -p "$(dirname "$CONFIG_FILE")"
     cat > "$CONFIG_FILE" << YAMLEOF
-user_id: "$USER_ID"
-api_key: "$API_KEY"
+credentials: "&api_key=${API_KEY}&user_id=${USER_ID}"
 delay: 1.0
 download_dir: "./downloads"
 timeout: 30
@@ -42,11 +41,4 @@ fi
 # ── Run ────────────────────────────────────────────────────────
 
 echo ""
-echo "╔══════════════════════════════════════╗"
-echo "║       Rule34 Tool — Web UI          ║"
-echo "╠══════════════════════════════════════╣"
-echo "║  Open     → http://localhost:${PORT}       ║"
-echo "╚══════════════════════════════════════╝"
-echo ""
-
-exec "$VENV_DIR/bin/python" server.py
+"$VENV_DIR/bin/python" server.py
