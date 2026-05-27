@@ -593,9 +593,32 @@ body {
 .status-msg { padding: 6px 0; font-size: 0.8rem; min-height: 20px; }
 .status-msg.ok { color: #3a7840; }
 .status-msg.err { color: #c83020; }
+
+/* ── Preview overlay ── */
+.preview-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: #000000cc; align-items: center; justify-content: center;
+}
+.preview-overlay.show { display: flex; }
+.preview-overlay img, .preview-overlay video {
+    max-width: 90vw; max-height: 90vh; border-radius: 8px;
+    box-shadow: 0 4px 32px #00000066; object-fit: contain;
+}
+.preview-overlay .preview-close {
+    position: absolute; top: 16px; right: 24px;
+    color: #fff; font-size: 2rem; cursor: pointer; z-index: 1001;
+    opacity: 0.6; transition: opacity 0.15s;
+}
+.preview-overlay .preview-close:hover { opacity: 1; }
 </style>
 </head>
 <body>
+
+<!-- Preview overlay -->
+<div class="preview-overlay" id="previewOverlay" onclick="closePreview()">
+    <span class="preview-close">✕</span>
+    <div id="previewContent"></div>
+</div>
 
 <!-- Top bar -->
 <div class="topbar">
@@ -1038,6 +1061,41 @@ function doSearch() {
         });
 }
 
+// ── Preview ──
+let _previewTimeout = null;
+
+function showPreview(url, ext) {
+    clearTimeout(_previewTimeout);
+    _previewTimeout = setTimeout(() => {
+        const overlay = document.getElementById('previewOverlay');
+        const content = document.getElementById('previewContent');
+        const isVideo = ext === 'mp4' || ext === 'webm';
+        if (isVideo) {
+            content.innerHTML = `<video src="${url}" autoplay loop controls style="max-width:90vw;max-height:90vh;"></video>`;
+            const vid = content.querySelector('video');
+            if (vid) vid.play().catch(() => {});
+        } else {
+            content.innerHTML = `<img src="${url}" alt="Preview" />`;
+        }
+        overlay.classList.add('show');
+    }, 400);
+}
+
+function hidePreview() {
+    clearTimeout(_previewTimeout);
+    const overlay = document.getElementById('previewOverlay');
+    overlay.classList.remove('show');
+    setTimeout(() => {
+        if (!overlay.classList.contains('show')) {
+            document.getElementById('previewContent').innerHTML = '';
+        }
+    }, 200);
+}
+
+function closePreview() {
+    hidePreview();
+}
+
 function renderPage() {
     const start = currentPage * PAGE_SIZE;
     const page = allPosts.slice(start, start + PAGE_SIZE);
@@ -1060,7 +1118,11 @@ function renderPage() {
     }
 
     html += page.map(p => `
-        <div class="card${selectedIds.has(p.id) ? ' selected' : ''}" data-id="${p.id}" onclick="toggleCard(${p.id}, event)">
+        <div class="card${selectedIds.has(p.id) ? ' selected' : ''}" data-id="${p.id}"
+             data-file="${esc(p.file_url)}" data-ext="${esc(p.ext)}"
+             onmouseenter="showPreview('${esc(p.file_url)}','${esc(p.ext)}')"
+             onmouseleave="hidePreview()"
+             onclick="toggleCard(${p.id}, event)">
             <input type="checkbox" class="sel" ${selectedIds.has(p.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleCard(${p.id}, event)" />
             <img class="thumb" src="${p.preview_url}" alt="Post ${p.id}" loading="lazy"
                  onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%23f0e6d4%22 width=%22200%22 height=%22200%22/><text fill=%22%23c8b488%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22>Err</text></svg>'" />
