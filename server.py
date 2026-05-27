@@ -15,6 +15,7 @@ from flask import Flask, request, jsonify, send_file, render_template_string
 
 from rule34.api import Rule34API, Post
 from rule34.config import Config
+from rule34.tag_cache import load_cache, save_cache, add_tags, search as cache_search
 
 app = Flask(__name__)
 
@@ -22,6 +23,7 @@ app = Flask(__name__)
 api: Rule34API | None = None
 cfg: Config | None = None
 download_dir: Path = Path("./downloads")
+tag_cache: set[str] = set()
 download_lock = threading.Lock()
 download_progress: dict = {}  # {download_id: {...}}
 
@@ -29,11 +31,13 @@ download_progress: dict = {}  # {download_id: {...}}
 # ─── Config / Init ────────────────────────────────────────────
 
 def load_config():
-    global api, cfg, download_dir
+    global api, cfg, download_dir, tag_cache
     cfg = Config.load()
     assert cfg is not None, "Config.load() returned None"
     download_dir = Path(cfg.download_dir).resolve()
     download_dir.mkdir(parents=True, exist_ok=True)
+    tag_cache = load_cache()
+    print(f"║  Tags cached: {len(tag_cache)} tags loaded")
     if cfg.has_credentials:
         api = Rule34API(
             user_id=cfg.user_id,
@@ -56,6 +60,18 @@ def reinit_api():
         )
 
 
+# ─── Helpers ─────────────────────────────────────────────────
+
+def _harvest_tags(posts: list[Post]) -> None:
+    """Add tags from search results to the local cache."""
+    global tag_cache
+    all_tags = []
+    for p in posts:
+        all_tags.extend(p.tag_list)
+    if all_tags:
+        tag_cache = add_tags(tag_cache, all_tags)
+
+
 # ─── API Endpoints ────────────────────────────────────────────
 
 @app.route("/api/status")
@@ -71,6 +87,7 @@ def api_status():
         "timeout": cfg.timeout if cfg else 30,
         "download_count": len(list(download_dir.iterdir())) if download_dir.exists() and download_dir.is_dir() else 0,
         "download_size_mb": round(sum(f.stat().st_size for f in download_dir.rglob("*") if f.is_file()) / 1024 / 1024, 1) if download_dir.exists() else 0,
+        "tags_cached": len(tag_cache),
     })
 
 
@@ -118,6 +135,7 @@ def api_search():
 
     try:
         posts = api.search(tags.split(), limit=min(limit, 1000), page=page)
+        _harvest_tags(posts)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -141,6 +159,7 @@ def api_search_all():
 
     try:
         posts = api.search_all(tags.split(), max_results=min(max_results, 5000))
+        _harvest_tags(posts)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -265,17 +284,12 @@ def api_delete_batch():
 
 @app.route("/api/tags")
 def api_tag_suggestions():
-    """Return tag autocomplete suggestions."""
-    if not api:
-        return jsonify([])
-    prefix = request.args.get("q", "").strip()
+    """Return tag autocomplete suggestions from local cache."""
+    prefix = request.args.get("q", "").strip().lower()
     if not prefix or len(prefix) < 2:
         return jsonify([])
-    try:
-        suggestions = api.tag_suggestions(prefix, limit=12)
-    except Exception:
-        suggestions = []
-    return jsonify(suggestions)
+    results = cache_search(tag_cache, prefix, limit=15)
+    return jsonify(results)
 
 
 @app.route("/api/test-connection", methods=["POST"])
@@ -1270,7 +1284,8 @@ if __name__ == "__main__":
     print("║       Rule34 Tool — Web UI          ║")
     print("╠══════════════════════════════════════╣")
     load_config()
-    print(f"║  Downloads → {download_dir}       ")
+    print(f"║  Downloads  → {download_dir}       ")
+    print(f"║  Tags cached: {len(tag_cache)} tags")
     print(f"║  Local:    → http://localhost:8010  ║")
     print(f"║  Network:  → http://{local_ip}:8010 ║")
     if not (cfg and cfg.has_credentials):

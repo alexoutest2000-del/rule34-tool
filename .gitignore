@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 venv/
 config.yaml
+tags_cache.json
 downloads/
 *.egg-info/
 dist/
