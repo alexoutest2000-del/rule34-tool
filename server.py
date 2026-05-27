@@ -615,9 +615,9 @@ body {
 <body>
 
 <!-- Preview overlay -->
-<div class="preview-overlay" id="previewOverlay" onclick="closePreview()">
-    <span class="preview-close">✕</span>
-    <div id="previewContent"></div>
+<div class="preview-overlay" id="previewOverlay" onclick="closePreview(event)">
+    <span class="preview-close" onclick="hidePreview()">✕</span>
+    <div id="previewContent" onclick="event.stopPropagation()"></div>
 </div>
 
 <!-- Top bar -->
@@ -1062,27 +1062,23 @@ function doSearch() {
 }
 
 // ── Preview ──
-let _previewTimeout = null;
+let _previewCard = null;
 
 function showPreview(url, ext) {
-    clearTimeout(_previewTimeout);
-    _previewTimeout = setTimeout(() => {
-        const overlay = document.getElementById('previewOverlay');
-        const content = document.getElementById('previewContent');
-        const isVideo = ext === 'mp4' || ext === 'webm';
-        if (isVideo) {
-            content.innerHTML = `<video src="${url}" autoplay loop controls style="max-width:90vw;max-height:90vh;"></video>`;
-            const vid = content.querySelector('video');
-            if (vid) vid.play().catch(() => {});
-        } else {
-            content.innerHTML = `<img src="${url}" alt="Preview" />`;
-        }
-        overlay.classList.add('show');
-    }, 400);
+    const overlay = document.getElementById('previewOverlay');
+    const content = document.getElementById('previewContent');
+    const isVideo = ext === 'mp4' || ext === 'webm';
+    if (isVideo) {
+        content.innerHTML = `<video src="${url}" autoplay loop muted playsinline controls style="max-width:90vw;max-height:90vh;"></video>`;
+        const vid = content.querySelector('video');
+        if (vid) vid.play().catch(() => {});
+    } else {
+        content.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.parentElement.classList.remove('show')" />`;
+    }
+    overlay.classList.add('show');
 }
 
 function hidePreview() {
-    clearTimeout(_previewTimeout);
     const overlay = document.getElementById('previewOverlay');
     overlay.classList.remove('show');
     setTimeout(() => {
@@ -1092,7 +1088,8 @@ function hidePreview() {
     }, 200);
 }
 
-function closePreview() {
+function closePreview(e) {
+    if (e && e.target !== document.getElementById('previewOverlay')) return;
     hidePreview();
 }
 
