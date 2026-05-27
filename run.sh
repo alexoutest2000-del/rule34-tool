@@ -10,7 +10,14 @@ PORT="${PORT:-8010}"
 
 # ── Kill existing instance on this port ───────────────────────
 
-OLD_PID=$(ss -tlnp "sport = :$PORT" 2>/dev/null | grep -oP 'pid=\K\d+' || true)
+OLD_PID=""
+if command -v ss &>/dev/null; then
+    OLD_PID=$(ss -tlnp "sport = :$PORT" 2>/dev/null | grep -oP 'pid=\K\d+' || true)
+elif command -v lsof &>/dev/null; then
+    OLD_PID=$(lsof -ti :$PORT 2>/dev/null || true)
+elif command -v fuser &>/dev/null; then
+    OLD_PID=$(fuser $PORT/tcp 2>/dev/null || true)
+fi
 if [ -n "$OLD_PID" ]; then
     echo "→ Killing old server on port $PORT (PID $OLD_PID)..."
     kill "$OLD_PID" 2>/dev/null || true
@@ -21,7 +28,10 @@ fi
 
 if [ ! -d "$VENV_DIR" ]; then
     echo "→ Creating virtual environment..."
-    python3 -m venv "$VENV_DIR"
+    if ! python3 -m venv "$VENV_DIR" 2>/dev/null; then
+        echo "✗ Failed to create venv. Install python3-venv (apt install python3-venv) and retry."
+        exit 1
+    fi
 fi
 
 # Reinstall if requirements.txt is newer than the venv marker
