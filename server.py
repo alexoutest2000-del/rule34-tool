@@ -842,7 +842,6 @@ function setupTagInput() {
                 console.log('[keydown] SPACE: adding tag', word);
                 addTag(word);
                 input.value = '';
-                if (!currentTags.includes(word)) currentTags.push(word);
                 renderChipsOnly();
                 updateSelCount();
             }
