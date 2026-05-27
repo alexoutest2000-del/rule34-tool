@@ -1181,12 +1181,20 @@ def index():
 # ─── Startup ────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    import socket
+    hostname = socket.gethostname()
+    try:
+        local_ip = socket.gethostbyname(hostname)
+    except Exception:
+        local_ip = "127.0.0.1"
+
     print("╔══════════════════════════════════════╗")
     print("║       Rule34 Tool — Web UI          ║")
     print("╠══════════════════════════════════════╣")
     load_config()
     print(f"║  Downloads → {download_dir}       ")
-    print(f"║  Open      → http://localhost:8010  ║")
+    print(f"║  Local:    → http://localhost:8010  ║")
+    print(f"║  Network:  → http://{local_ip}:8010 ║")
     if not (cfg and cfg.has_credentials):
         print("║  ⚠ API not configured — click ⚙   ║")
     print("╚══════════════════════════════════════╝")
