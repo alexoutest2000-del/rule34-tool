@@ -770,6 +770,7 @@ function setupTagInput() {
         // Update chips without destroying input
         renderChipsOnly();
 
+        console.log('[input] incomplete.length:', incomplete.length);
         if (incomplete.length >= 2) {
             fetchSuggestions(incomplete);
         } else {
@@ -872,25 +873,34 @@ function addTag(tag) {
 }
 
 function fetchSuggestions(prefix) {
+    console.log('[fetchSuggestions] prefix:', prefix);
     clearTimeout(window._suggestDebounce);
     window._suggestDebounce = setTimeout(() => {
-        fetch('/api/tags?q=' + encodeURIComponent(prefix))
+        const url = '/api/tags?q=' + encodeURIComponent(prefix);
+        console.log('[fetchSuggestions] calling:', url);
+        fetch(url)
             .then(r => r.json())
             .then(tags => {
+                console.log('[fetchSuggestions] got tags:', JSON.stringify(tags));
                 tagSuggestions = tags.filter(t => !currentTags.includes(t));
                 highlightedSuggestion = -1;
                 renderSuggestions();
-            }).catch(() => { tagSuggestions = []; });
+            }).catch(e => { 
+                console.error('[fetchSuggestions] error:', e);
+                tagSuggestions = []; 
+            });
     }, 200);
 }
 
 function renderSuggestions() {
     const el = document.getElementById('tagSuggestions');
+    console.log('[renderSuggestions] count:', tagSuggestions.length, 'el exists:', !!el);
     if (!tagSuggestions.length) { el.classList.remove('open'); return; }
     el.classList.add('open');
     el.innerHTML = tagSuggestions.map((t, i) =>
         `<div class="tag-suggestion${i === highlightedSuggestion ? ' highlighted' : ''}" onclick="pickSuggestion(${i})">${esc(t)}</div>`
     ).join('');
+    console.log('[renderSuggestions] opened, innerHTML length:', el.innerHTML.length);
 }
 
 function pickSuggestion(i) {
