@@ -936,6 +936,12 @@ function switchTab(tab) {
 
 // ── Search ──
 function doSearch() {
+    // Grab any pending text from the input field and add it as a tag
+    const input = document.getElementById('tagInput');
+    if (input && input.value.trim()) {
+        addTag(input.value.trim());
+        renderChips();  // this also calls setupTagInput() which rebinds listeners
+    }
     console.log('[doSearch] currentTags:', JSON.stringify(currentTags), 'length:', currentTags.length);
     if (!currentTags.length) {
         console.log('[doSearch] ABORT: no tags');
