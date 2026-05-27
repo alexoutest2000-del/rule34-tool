@@ -1092,23 +1092,27 @@ function doSearch() {
 }
 
 // ── Preview ──
-let _previewCard = null;
+let _previewTimeout = null;
 
 function showPreview(url, ext) {
-    const overlay = document.getElementById('previewOverlay');
-    const content = document.getElementById('previewContent');
-    const isVideo = ext === 'mp4' || ext === 'webm';
-    if (isVideo) {
-        content.innerHTML = `<video src="${url}" autoplay loop muted playsinline controls style="max-width:90vw;max-height:90vh;"></video>`;
-        const vid = content.querySelector('video');
-        if (vid) vid.play().catch(() => {});
-    } else {
-        content.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.parentElement.classList.remove('show')" />`;
-    }
-    overlay.classList.add('show');
+    clearTimeout(_previewTimeout);
+    _previewTimeout = setTimeout(() => {
+        const overlay = document.getElementById('previewOverlay');
+        const content = document.getElementById('previewContent');
+        const isVideo = ext === 'mp4' || ext === 'webm';
+        if (isVideo) {
+            content.innerHTML = `<video src="${url}" autoplay loop muted playsinline controls style="max-width:90vw;max-height:90vh;"></video>`;
+            const vid = content.querySelector('video');
+            if (vid) vid.play().catch(() => {});
+        } else {
+            content.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.parentElement.classList.remove('show')" />`;
+        }
+        overlay.classList.add('show');
+    }, 3000);
 }
 
 function hidePreview() {
+    clearTimeout(_previewTimeout);
     const overlay = document.getElementById('previewOverlay');
     overlay.classList.remove('show');
     setTimeout(() => {
