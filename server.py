@@ -820,20 +820,24 @@ function setupTagInput() {
 
     input.addEventListener('input', (e) => {
         const val = input.value;
-        const parts = val.split(/\\s+/);
-        console.log('[input] val:', JSON.stringify(val), 'parts:', JSON.stringify(parts));
-        currentTags = parts.slice(0, -1).filter(Boolean);
-        const incomplete = parts[parts.length - 1] || '';
-        console.log('[input] currentTags:', JSON.stringify(currentTags), 'incomplete:', JSON.stringify(incomplete));
+        // Only update currentTags from input if there's content.
+        // An empty value (e.g. after Space clears the field) should not wipe existing tags.
+        if (val) {
+            const parts = val.split(/\\s+/);
+            console.log('[input] val:', JSON.stringify(val), 'parts:', JSON.stringify(parts));
+            currentTags = parts.slice(0, -1).filter(Boolean);
+            const incomplete = parts[parts.length - 1] || '';
+            console.log('[input] currentTags:', JSON.stringify(currentTags), 'incomplete:', JSON.stringify(incomplete));
 
-        // Update chips without destroying input
-        renderChipsOnly();
+            // Update chips without destroying input
+            renderChipsOnly();
 
-        console.log('[input] incomplete.length:', incomplete.length);
-        if (incomplete.length >= 2) {
-            fetchSuggestions(incomplete);
-        } else {
-            closeSuggestions();
+            console.log('[input] incomplete.length:', incomplete.length);
+            if (incomplete.length >= 2) {
+                fetchSuggestions(incomplete);
+            } else {
+                closeSuggestions();
+            }
         }
     });
 
