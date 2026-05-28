@@ -762,11 +762,12 @@ window.addEventListener('DOMContentLoaded', () => {
     setupTagInput();
     console.log('[init] setupTagInput done. currentTags:', JSON.stringify(currentTags));
 
-    // Preview delegation on gallery — show on hover, close on click outside
+    // Preview: right-click a card to open, right-click/click/Escape to close
     const gallery = document.getElementById('gallery');
-    gallery.addEventListener('mouseover', (e) => {
+    gallery.addEventListener('contextmenu', (e) => {
         const card = e.target.closest('.card');
         if (card) {
+            e.preventDefault();
             const url = card.dataset.file;
             const ext = card.dataset.ext;
             if (url) showPreview(url, ext);
@@ -779,10 +780,10 @@ window.addEventListener('DOMContentLoaded', () => {
             hidePreview();
         }
     });
-    // Right-click anywhere closes overlay
+    // Right-click outside a card closes overlay
     document.addEventListener('contextmenu', (e) => {
         const overlay = document.getElementById('previewOverlay');
-        if (overlay.classList.contains('show')) {
+        if (overlay.classList.contains('show') && !e.target.closest('.card')) {
             e.preventDefault();
             hidePreview();
         }
@@ -1092,27 +1093,22 @@ function doSearch() {
 }
 
 // ── Preview ──
-let _previewTimeout = null;
 
 function showPreview(url, ext) {
-    clearTimeout(_previewTimeout);
-    _previewTimeout = setTimeout(() => {
-        const overlay = document.getElementById('previewOverlay');
-        const content = document.getElementById('previewContent');
-        const isVideo = ext === 'mp4' || ext === 'webm';
-        if (isVideo) {
-            content.innerHTML = `<video src="${url}" autoplay loop muted playsinline controls style="max-width:90vw;max-height:90vh;"></video>`;
-            const vid = content.querySelector('video');
-            if (vid) vid.play().catch(() => {});
-        } else {
-            content.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.parentElement.classList.remove('show')" />`;
-        }
-        overlay.classList.add('show');
-    }, 3000);
+    const overlay = document.getElementById('previewOverlay');
+    const content = document.getElementById('previewContent');
+    const isVideo = ext === 'mp4' || ext === 'webm';
+    if (isVideo) {
+        content.innerHTML = `<video src="${url}" autoplay loop muted playsinline controls style="max-width:90vw;max-height:90vh;"></video>`;
+        const vid = content.querySelector('video');
+        if (vid) vid.play().catch(() => {});
+    } else {
+        content.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.parentElement.classList.remove('show')" />`;
+    }
+    overlay.classList.add('show');
 }
 
 function hidePreview() {
-    clearTimeout(_previewTimeout);
     const overlay = document.getElementById('previewOverlay');
     overlay.classList.remove('show');
     setTimeout(() => {
