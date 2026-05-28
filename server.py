@@ -15,7 +15,7 @@ from flask import Flask, request, jsonify, send_file, render_template_string
 
 from rule34.api import Rule34API, Post
 from rule34.config import Config
-from rule34.tag_cache import load_cache, save_cache, add_tags, add_tag_types, search as cache_search
+from rule34.tag_cache import load_cache, save_cache, add_tags, search as cache_search
 
 app = Flask(__name__)
 
@@ -23,7 +23,7 @@ app = Flask(__name__)
 api: Rule34API | None = None
 cfg: Config | None = None
 download_dir: Path = Path("./downloads")
-tag_cache: dict[str, int] = {}
+tag_cache: set[str] = set()
 download_lock = threading.Lock()
 download_progress: dict = {}  # {download_id: {...}}
 
@@ -82,18 +82,10 @@ def _seed_tag_cache() -> None:
             if resp.status_code != 200:
                 break
             root = ET.fromstring(resp.text)
-            type_map = {}
-            tags_on_page = []
-            for t in root.findall("tag"):
-                name = t.get("name", "")
-                ttype = int(t.get("type", 0))
-                if name:
-                    tags_on_page.append(name)
-                    type_map[name.lower()] = ttype
+            tags_on_page = [t.get("name", "") for t in root.findall("tag") if t.get("name")]
             if not tags_on_page:
                 break
             tag_cache = add_tags(tag_cache, tags_on_page)
-            tag_cache = add_tag_types(tag_cache, type_map)
             new_count += len(tags_on_page)
             print(f"\r  → Seed page {page + 1}/{pages_to_fetch}: cache now {len(tag_cache)} tags", end="", flush=True)
             time.sleep(api.delay)
@@ -343,20 +335,6 @@ def api_tag_suggestions():
         return jsonify([])
     results = cache_search(tag_cache, prefix, limit=15)
     return jsonify(results)
-
-
-@app.route("/api/tag_types", methods=["POST"])
-def api_tag_types():
-    """Return type info for a list of tags."""
-    data = request.get_json(force=True)
-    tag_list = data.get("tags", [])
-    from rule34.tag_cache import get_type_name
-    result = {}
-    for t in tag_list:
-        t = t.strip().lower()
-        if t:
-            result[t] = {"type": get_type_name(tag_cache, t)}
-    return jsonify(result)
 
 
 @app.route("/api/test-connection", methods=["POST"])
@@ -632,157 +610,6 @@ body {
     opacity: 0.6; transition: opacity 0.15s;
 }
 .preview-overlay .preview-close:hover { opacity: 1; }
-
-/* ── Layout ── */
-.app-layout { display: flex; flex: 1; min-height: 0; }
-.sidebar {
-    width: 280px; min-width: 280px; background: #faf6ef;
-    border-right: 1px solid #d4c4a8; overflow-y: auto;
-    display: flex; flex-direction: column;
-    transition: width 0.2s, min-width 0.2s;
-}
-.sidebar.collapsed { width: 0; min-width: 0; overflow: hidden; border-right: none; }
-.main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-
-/* ── Topbar additions ── */
-.topbar .sidebar-toggle {
-    background: none; border: none; color: #8a7050; cursor: pointer;
-    font-size: 1.1rem; padding: 4px 8px; border-radius: 4px;
-}
-.topbar .sidebar-toggle:hover { background: #e8dece; color: #5a4030; }
-.topbar .sep { width: 1px; height: 24px; background: #d4c4a8; margin: 0 4px; }
-
-/* ── Saved searches ── */
-.saved-searches { position: relative; display: inline-block; }
-.saved-dropdown {
-    display: none; position: absolute; top: 100%; right: 0; z-index: 400;
-    background: #fff; border: 1px solid #c8b488; border-radius: 8px;
-    box-shadow: 0 4px 16px #00000033; min-width: 200px; max-height: 300px;
-    overflow-y: auto; margin-top: 4px;
-}
-.saved-dropdown.open { display: block; }
-.saved-item {
-    padding: 8px 14px; font-size: 0.82rem; cursor: pointer;
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid #f0e6d4;
-}
-.saved-item:hover { background: #f5ede0; }
-.saved-item .saved-del { color: #a89060; font-size: 0.75rem; }
-.saved-item .saved-del:hover { color: #c83020; }
-
-/* ── Gallery density modes ── */
-.gallery.compact { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; padding: 8px 12px; }
-.gallery.compact .card .thumb { height: 130px; }
-.gallery.compact .card .meta { padding: 4px 6px; font-size: 0.65rem; }
-.gallery.compact .card .tags { padding: 0 6px 4px; font-size: 0.55rem; }
-.gallery.compact .card .sel { width: 16px; height: 16px; top: 4px; left: 4px; }
-.gallery.list {
-    grid-template-columns: 1fr; gap: 2px; padding: 4px 16px;
-}
-.gallery.list .card {
-    display: flex; align-items: center; gap: 10px; padding: 6px 10px;
-    border-radius: 4px; border: 1px solid transparent;
-}
-.gallery.list .card:hover { border-color: #d4c4a8; transform: none; box-shadow: none; }
-.gallery.list .card.selected { border-color: #c87c2e; box-shadow: none; }
-.gallery.list .card .thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-.gallery.list .card .sel { position: static; width: 16px; height: 16px; flex-shrink: 0; }
-.gallery.list .card .meta { padding: 0; flex-shrink: 0; min-width: 80px; }
-.gallery.list .card .tags { padding: 0; flex: 1; font-size: 0.7rem; white-space: nowrap; }
-.gallery.list .card .list-id { font-size: 0.7rem; color: #a89060; flex-shrink: 0; min-width: 60px; }
-.gallery.list .card .list-rating { flex-shrink: 0; }
-
-/* ── Card highlight ── */
-.card.sidebar-highlight { border-color: #5b8c5a; box-shadow: 0 0 12px #5b8c5a33; }
-
-/* ── Sidebar sections ── */
-.sidebar-section { padding: 10px 0; border-bottom: 1px solid #e8dece; }
-.sidebar-section:last-child { border-bottom: none; }
-.sidebar-title {
-    padding: 4px 14px; font-size: 0.7rem; color: #a89060;
-    text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;
-}
-.sidebar-tag {
-    display: flex; align-items: center; gap: 4px;
-    padding: 4px 14px; cursor: pointer; font-size: 0.78rem;
-    transition: background 0.1s; position: relative;
-}
-.sidebar-tag:hover { background: #f0e6d4; }
-.sidebar-tag.highlighted { background: #e8f0e0; }
-.sidebar-tag .tag-color {
-    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
-}
-.sidebar-tag .tag-name {
-    flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    color: #3a2a10;
-}
-.sidebar-tag .tag-count {
-    font-size: 0.68rem; color: #a89060; flex-shrink: 0; min-width: 30px; text-align: right;
-}
-.sidebar-tag .tag-actions {
-    display: none; gap: 2px; flex-shrink: 0;
-}
-.sidebar-tag:hover .tag-actions { display: flex; }
-.sidebar-tag .tag-act {
-    font-size: 0.7rem; padding: 1px 4px; border-radius: 3px;
-    border: 1px solid transparent; cursor: pointer; background: none;
-    color: #a89060; line-height: 1;
-}
-.sidebar-tag .tag-act:hover { background: #e8dece; color: #5a4030; }
-.sidebar-tag .tag-act.tag-minus:hover { color: #c83020; border-color: #c83020; }
-.sidebar-tag .tag-act.tag-plus:hover { color: #3a7840; border-color: #3a7840; }
-.sidebar-tag .tag-act.tag-wiki:hover { color: #5b8c5a; }
-
-/* Tag color coding */
-.tag-color.type-artist { background: #c83020; }
-.tag-color.type-character { background: #3a7840; }
-.tag-color.type-copyright { background: #8b3a8b; }
-.tag-color.type-metadata { background: #c88a1a; }
-.tag-color.type-general { background: #5b8c5a; }
-
-/* Frequency bar */
-.tag-freq-bar {
-    height: 4px; background: #e8dece; border-radius: 2px;
-    flex: 1; margin-left: 6px; min-width: 20px;
-}
-.tag-freq-fill {
-    height: 100%; border-radius: 2px; background: #c87c2e;
-    opacity: 0.6;
-}
-
-/* ── Right-click context menu ── */
-.context-menu {
-    display: none; position: fixed; z-index: 1000;
-    background: #fff; border: 1px solid #c8b488; border-radius: 8px;
-    box-shadow: 0 4px 16px #00000033; min-width: 160px; padding: 4px 0;
-}
-.context-menu.open { display: block; }
-.context-item {
-    padding: 8px 16px; font-size: 0.82rem; cursor: pointer;
-    color: #3a2a10; transition: background 0.1s;
-    display: flex; align-items: center; gap: 8px;
-}
-.context-item:hover { background: #f0e6d4; }
-.context-item .ctx-icon { font-size: 0.85rem; width: 16px; text-align: center; }
-.context-sep { height: 1px; background: #e8dece; margin: 4px 0; }
-
-/* ── Commonly paired ── */
-.paired-tags { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 14px; }
-.paired-chip {
-    padding: 3px 8px; border: 1px solid #d4c4a8; border-radius: 12px;
-    font-size: 0.72rem; cursor: pointer; white-space: nowrap;
-    transition: all 0.1s; color: #5a4030; background: #fff;
-}
-.paired-chip:hover { background: #c87c2e; border-color: #c87c2e; color: #fff; }
-
-/* ── Autocomplete type label ── */
-.tag-suggestion .sug-type { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
-
-/* ── Responsive ── */
-@media (max-width: 800px) {
-    .sidebar { width: 0; min-width: 0; overflow: hidden; border-right: none; }
-    .sidebar.open { width: 260px; min-width: 260px; position: fixed; top: 50px; left: 0; bottom: 0; z-index: 200; box-shadow: 4px 0 16px #00000033; }
-}
 </style>
 </head>
 <body>
@@ -791,30 +618,19 @@ body {
 <div class="preview-overlay" id="previewOverlay" onclick="closePreview(event)">
     <span class="preview-close" onclick="hidePreview()">✕</span>
     <div id="previewContent" onclick="event.stopPropagation()"></div>
-
-<!-- Context menu -->
-<div class="context-menu" id="contextMenu"></div>
 </div>
 
 <!-- Top bar -->
 <div class="topbar">
-    
+    <h1>🔞</h1>
     <div class="autocomplete-wrap" style="flex:1;min-width:220px;position:relative">
         <div class="tag-area" id="tagArea">
             <input type="text" id="tagInput" placeholder="Type tags..." autofocus autocomplete="off" />
         </div>
         <div class="tag-suggestions" id="tagSuggestions"></div>
     </div>
-    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle tag sidebar (Ctrl+B)">☰</button>
-    <h1 id="topIcon">🔞</h1>
     <button class="primary" id="searchBtn" onclick="doSearch()">🔍 Search</button>
-        <div class="saved-searches">
-        <button class="icon-btn" onclick="toggleSavedSearches()" title="Saved searches">💟</button>
-        <div class="saved-dropdown" id="savedDropdown"></div>
-    </div>
-    <span class="sep"></span>
-    <button class="icon-btn" onclick="cycleDensity()" id="densityBtn" title="View density (Ctrl+D)">⊞</button>
-<button class="icon-btn" onclick="openSettings()">⚙</button>
+    <button class="icon-btn" onclick="openSettings()">⚙</button>
 </div>
 
 <!-- Selection bar (visible after search) -->
@@ -837,31 +653,6 @@ body {
 </div>
 
 <!-- Tabs -->
-<div class="app-layout">
-    <!-- Tag Sidebar -->
-    <div class="sidebar" id="tagSidebar">
-        <div class="sidebar-section" id="pairedSection" style="display:none">
-            <div class="sidebar-title">🔗 Commonly Paired</div>
-            <div class="paired-tags" id="pairedTags"></div>
-        </div>
-        <div class="sidebar-section" id="freqSection" style="display:none">
-            <div class="sidebar-title">📊 Tag Frequency</div>
-            <div id="freqTags"></div>
-        </div>
-        <div class="sidebar-section" id="allTagsSection" style="display:none">
-            <div class="sidebar-title">🏷 All Tags (<span id="tagCount">0</span>)</div>
-            <div id="allTagsList"></div>
-        </div>
-        <div class="sidebar-section" id="hoverTagsSection" style="display:none">
-            <div class="sidebar-title">🖱 Image Tags</div>
-            <div id="hoverTagsList"></div>
-        </div>
-        <div id="sidebarEmpty" style="padding:30px 16px;text-align:center;color:#a89060;font-size:0.82rem;">
-            Search to see tags
-        </div>
-    </div>
-    <!-- Main content -->
-    <div class="main-area">
 <div class="tabs">
     <div class="tab active" id="tabSearch" onclick="switchTab('search')">🔍 Search</div>
     <div class="tab" id="tabDownloads" onclick="switchTab('downloads')">📁 Downloads</div>
@@ -869,7 +660,7 @@ body {
 
 <!-- Search panel -->
 <div class="panel active" id="panelSearch">
-    <div class="status-bar" id="statusBar">Type tags and press Enter or click Search. <small style="color:#a89060">Shortcuts: s=focus search, a=select all, d=download, Esc=clear, Ctrl+B=toggle sidebar, Ctrl+D=cycle density, j/k=navigate</small></div>
+    <div class="status-bar" id="statusBar">Type tags and press Enter or click Search.</div>
     <div class="gallery" id="gallery">
         <div class="empty"><p>Search for something to get started</p></div>
     </div>
@@ -892,9 +683,6 @@ body {
 </div>
 
 <!-- Settings overlay -->
-
-    </div><!-- main-area -->
-</div><!-- app-layout -->
 <div class="settings-overlay" id="settingsOverlay">
     <div class="settings-panel">
         <div class="settings-header">
@@ -963,12 +751,6 @@ let activeDlId = null;
 let tagSuggestions = [];
 let highlightedSuggestion = -1;
 let searchDone = false;
-let sidebarOpen = true;
-let densityMode = 0;
-let tagTypesCache = {};
-let hoveredCardTags = null;
-let _focusedCardIdx = -1;
-let _ctxTargetTag = null;
 let currentTags = [];
 
 // ── Init ──
@@ -978,15 +760,6 @@ window.addEventListener('DOMContentLoaded', () => {
     loadFiles();
     loadSettings();
     setupTagInput();
-    loadDensityPref();
-    setupKeyboardShortcuts();
-    setupContextMenu();
-    setupGalleryDelegation();
-    // Restore sidebar state
-    if (localStorage.getItem('r34_sidebar') === '0') {
-        sidebarOpen = false;
-        document.getElementById('tagSidebar').classList.add('collapsed');
-    }
     console.log('[init] setupTagInput done. currentTags:', JSON.stringify(currentTags));
 
     // Preview delegation on gallery — show on hover, close on click outside
@@ -1278,47 +1051,87 @@ function doSearch() {
     // Grab any pending text from the input field and add it as a tag
     const input = document.getElementById('tagInput');
     if (input && input.value.trim()) {
-        const word = input.value.trim().replace(/\s+/g, '_');
-        if (word && !currentTags.includes(word)) currentTags.push(word);
+        addTag(input.value.trim());
         renderChips();
     }
+    console.log('[doSearch] currentTags:', JSON.stringify(currentTags), 'length:', currentTags.length);
     if (!currentTags.length) {
+        console.log('[doSearch] ABORT: no tags');
         document.getElementById('statusBar').textContent = 'No tags entered. Type a tag and press Enter or click Search.';
         return;
     }
 
     document.getElementById('statusBar').textContent = 'Searching (fetching all results)...';
     document.getElementById('gallery').innerHTML = '<div class="loading">Searching...</div>';
-    clearSidebar();
 
-    const url = '/api/search_all?tags=' + encodeURIComponent(currentTags.join(' ')) + '&max=5000';
+    // Fetch ALL results (up to 5000) via search_all
+    const url = `/api/search_all?tags=${encodeURIComponent(currentTags.join(' '))}&max=5000`;
+    console.log('[doSearch] fetching:', url);
 
     fetch(url)
         .then(r => r.json())
         .then(posts => {
+            console.log('[doSearch] got posts:', Array.isArray(posts) ? posts.length : typeof posts, posts.error || '');
             if (posts.error) throw new Error(posts.error);
             allPosts = posts;
             currentPage = 0;
             selectedIds.clear();
             searchDone = true;
             renderPage();
-            const msg = posts.length === 0 ? 'No results' : posts.length + ' results';
-            document.getElementById('statusBar').textContent = msg + ' for "' + currentTags.join(' ') + '"';
+            const msg = posts.length === 0 ? 'No results' : `${posts.length} results`;
+            document.getElementById('statusBar').textContent = `${msg} for "${currentTags.join(' ')}"`;
             document.getElementById('selCountNum').textContent = posts.length;
             document.getElementById('selectionBar').classList.remove('hidden');
             updateSelCount();
-            buildTagSidebar(posts);
         })
         .catch(e => {
-            document.getElementById('gallery').innerHTML = '<div class="empty"><p>Error: ' + e.message + '</p></div>';
+            console.error('[doSearch] error:', e.message);
+            document.getElementById('gallery').innerHTML = `<div class="empty"><p>Error: ${e.message}</p></div>`;
             document.getElementById('statusBar').textContent = 'Search failed.';
         });
-}function renderPage() {
+}
+
+// ── Preview ──
+let _previewTimeout = null;
+
+function showPreview(url, ext) {
+    clearTimeout(_previewTimeout);
+    _previewTimeout = setTimeout(() => {
+        const overlay = document.getElementById('previewOverlay');
+        const content = document.getElementById('previewContent');
+        const isVideo = ext === 'mp4' || ext === 'webm';
+        if (isVideo) {
+            content.innerHTML = `<video src="${url}" autoplay loop muted playsinline controls style="max-width:90vw;max-height:90vh;"></video>`;
+            const vid = content.querySelector('video');
+            if (vid) vid.play().catch(() => {});
+        } else {
+            content.innerHTML = `<img src="${url}" alt="Preview" onerror="this.parentElement.parentElement.classList.remove('show')" />`;
+        }
+        overlay.classList.add('show');
+    }, 3000);
+}
+
+function hidePreview() {
+    clearTimeout(_previewTimeout);
+    const overlay = document.getElementById('previewOverlay');
+    overlay.classList.remove('show');
+    setTimeout(() => {
+        if (!overlay.classList.contains('show')) {
+            document.getElementById('previewContent').innerHTML = '';
+        }
+    }, 200);
+}
+
+function closePreview(e) {
+    if (e && e.target !== document.getElementById('previewOverlay')) return;
+    hidePreview();
+}
+
+function renderPage() {
     const start = currentPage * PAGE_SIZE;
     const page = allPosts.slice(start, start + PAGE_SIZE);
     const gallery = document.getElementById('gallery');
     const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
-    const isList = densityMode === 2;
 
     if (!page.length) {
         gallery.innerHTML = '<div class="empty"><p>No results on this page</p></div>';
@@ -1327,36 +1140,33 @@ function doSearch() {
 
     let html = '';
     if (totalPages > 1) {
-        html += '<div style="grid-column:1/-1;display:flex;gap:8px;align-items:center;padding:4px 0;font-size:0.82rem;color:#8a7050">' +
-            '<button onclick="currentPage=Math.max(0,currentPage-1);renderPage();window.scrollTo(0,0);" ' + (currentPage===0?'disabled':'') + ' style="font-size:0.8rem">◀ Prev</button>' +
-            '<span>Page ' + (currentPage+1) + ' of ' + totalPages + '</span>' +
-            '<button onclick="currentPage=Math.min(' + (totalPages-1) + ',currentPage+1);renderPage();window.scrollTo(0,0);" ' + (currentPage>=totalPages-1?'disabled':'') + ' style="font-size:0.8rem">Next ▶</button>' +
-            '<span style="margin-left:auto">' + allPosts.length + ' total</span></div>';
+        html += `<div style="grid-column:1/-1;display:flex;gap:8px;align-items:center;padding:4px 0;font-size:0.82rem;color:#8a7050">
+            <button onclick="currentPage=Math.max(0,currentPage-1);renderPage();window.scrollTo(0,0);" ${currentPage===0?'disabled':''} style="font-size:0.8rem">◀ Prev</button>
+            <span>Page ${currentPage+1} of ${totalPages}</span>
+            <button onclick="currentPage=Math.min(${totalPages-1},currentPage+1);renderPage();window.scrollTo(0,0);" ${currentPage>=totalPages-1?'disabled':''} style="font-size:0.8rem">Next ▶</button>
+            <span style="margin-left:auto">${allPosts.length} total</span>
+        </div>`;
     }
 
-    html += page.map(p => {
-        const allTagsStr = (p.tags || []).join(' ');
-        const selClass = selectedIds.has(p.id) ? ' selected' : '';
-        const checked = selectedIds.has(p.id) ? 'checked' : '';
-        if (isList) {
-            return '<div class="card' + selClass + '" data-id="' + p.id + '" data-alltags="' + esc(allTagsStr) + '" data-file="' + esc(p.file_url) + '" data-ext="' + esc(p.ext) + '" onclick="toggleCard(' + p.id + ', event)">' +
-                '<input type="checkbox" class="sel" ' + checked + ' onclick="event.stopPropagation(); toggleCard(' + p.id + ', event)" />' +
-                '<img class="thumb" src="' + p.preview_url + '" alt="Post ' + p.id + '" loading="lazy" onerror="this.style.display=\'none\'" />' +
-                '<span class="list-id">#' + p.id + '</span>' +
-                '<div class="meta"><span class="dims">' + p.width + '×' + p.height + '</span></div>' +
-                '<span class="list-rating"><span class="rating ' + p.rating + '">' + (p.rating || '?') + '</span></span>' +
-                '<div class="tags">' + (p.tags || []).slice(0, 10).join(' ') + '</div></div>';
-        }
-        return '<div class="card' + selClass + '" data-id="' + p.id + '" data-alltags="' + esc(allTagsStr) + '" data-file="' + esc(p.file_url) + '" data-ext="' + esc(p.ext) + '" onclick="toggleCard(' + p.id + ', event)">' +
-            '<input type="checkbox" class="sel" ' + checked + ' onclick="event.stopPropagation(); toggleCard(' + p.id + ', event)" />' +
-            '<img class="thumb" src="' + p.preview_url + '" alt="Post ' + p.id + '" loading="lazy" onerror="this.style.display=\'none\'" />' +
-            '<div class="meta"><span class="dims">' + p.width + '×' + p.height + '</span><span class="rating ' + p.rating + '">' + (p.rating || '?') + '</span></div>' +
-            '<div class="tags">' + (p.tags || []).slice(0, 5).join(' ') + '</div></div>';
-    }).join('');
+    html += page.map(p => `
+        <div class="card${selectedIds.has(p.id) ? ' selected' : ''}" data-id="${p.id}"
+             data-file="${esc(p.file_url)}" data-ext="${esc(p.ext)}"
+             onclick="toggleCard(${p.id}, event)">
+            <input type="checkbox" class="sel" ${selectedIds.has(p.id) ? 'checked' : ''} onclick="event.stopPropagation(); toggleCard(${p.id}, event)" />
+            <img class="thumb" src="${p.preview_url}" alt="Post ${p.id}" loading="lazy"
+                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%23f0e6d4%22 width=%22200%22 height=%22200%22/><text fill=%22%23c8b488%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22>Err</text></svg>'" />
+            <div class="meta">
+                <span class="dims">${p.width}×${p.height}</span>
+                <span class="rating ${p.rating}">${p.rating || '?'}</span>
+            </div>
+            <div class="tags">${(p.tags || []).slice(0, 5).join(' ')}</div>
+        </div>`).join('');
 
     gallery.innerHTML = html;
     updateSelCount();
-}function updateSelCount() {
+}
+
+function updateSelCount() {
     if (!searchDone) return;
     const selPageNum = document.getElementById('selPageNum');
     const dlCount = document.getElementById('dlCount');
@@ -1577,339 +1387,11 @@ function testConnection() {
         statusEl.className = 'status-msg err';
     });
 }
-
-
-// ── Sidebar Toggle ──
-function toggleSidebar() {
-    sidebarOpen = !sidebarOpen;
-    document.getElementById('tagSidebar').classList.toggle('collapsed', !sidebarOpen);
-    localStorage.setItem('r34_sidebar', sidebarOpen ? '1' : '0');
-}
-
-// ── Density Modes ──
-const DENSITY_ICONS = ['⊞', '⊟', '≡'];
-function cycleDensity() {
-    densityMode = (densityMode + 1) % 3;
-    applyDensity();
-}
-function applyDensity() {
-    const g = document.getElementById('gallery');
-    g.classList.remove('compact', 'list');
-    if (densityMode === 1) g.classList.add('compact');
-    if (densityMode === 2) g.classList.add('list');
-    document.getElementById('densityBtn').textContent = DENSITY_ICONS[densityMode];
-    document.getElementById('densityBtn').title = ['Large grid', 'Compact grid', 'List'][densityMode] + ' (Ctrl+D)';
-    localStorage.setItem('r34_density', densityMode);
-    if (searchDone) renderPage();
-}
-function loadDensityPref() {
-    const saved = localStorage.getItem('r34_density');
-    if (saved !== null) densityMode = parseInt(saved);
-    applyDensity();
-}
-
-// ── Tag Sidebar Building ──
-function clearSidebar() {
-    document.getElementById('pairedSection').style.display = 'none';
-    document.getElementById('freqSection').style.display = 'none';
-    document.getElementById('allTagsSection').style.display = 'none';
-    document.getElementById('hoverTagsSection').style.display = 'none';
-    document.getElementById('sidebarEmpty').style.display = 'block';
-    document.getElementById('pairedTags').innerHTML = '';
-    document.getElementById('freqTags').innerHTML = '';
-    document.getElementById('allTagsList').innerHTML = '';
-    document.getElementById('hoverTagsList').innerHTML = '';
-}
-
-function buildTagSidebar(posts) {
-    document.getElementById('sidebarEmpty').style.display = 'none';
-    const tagCounts = {};
-    posts.forEach(p => {
-        (p.tags || []).forEach(t => {
-            t = t.toLowerCase();
-            tagCounts[t] = (tagCounts[t] || 0) + 1;
-        });
-    });
-    const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
-    const maxCount = sortedTags.length > 0 ? sortedTags[0][1] : 1;
-    const activeTags = new Set(currentTags.map(t => t.toLowerCase()));
-
-    // Fetch types
-    const allNames = sortedTags.map(e => e[0]);
-    fetch('/api/tag_types', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({tags: allNames})
-    }).then(r => r.json()).then(types => {
-        Object.entries(types).forEach(([t, info]) => { tagTypesCache[t] = info.type; });
-        renderAllTags(sortedTags, maxCount, activeTags);
-    }).catch(() => { renderAllTags(sortedTags, maxCount, activeTags); });
-
-    buildPairedTags(sortedTags, activeTags);
-    buildFreqTags(sortedTags.slice(0, 15), maxCount, activeTags);
-}
-
-function renderAllTags(sortedTags, maxCount, activeTags) {
-    document.getElementById('allTagsSection').style.display = 'block';
-    document.getElementById('tagCount').textContent = sortedTags.length;
-    document.getElementById('allTagsList').innerHTML = sortedTags.map(([tag, count]) => {
-        const ttype = tagTypesCache[tag] || 'general';
-        const pct = Math.round((count / maxCount) * 100);
-        const isActive = activeTags.has(tag);
-        const et = esc(tag);
-        return '<div class="sidebar-tag' + (isActive ? ' highlighted' : '') + '" data-tag="' + et + '" ' +
-            'onclick="sidebarTagClick(\'' + et + '\', event)" ' +
-            'oncontextmenu="tagContextMenu(event, \'' + et + '\')" ' +
-            'onmouseenter="highlightTagCards(\'' + et + '\')" ' +
-            'onmouseleave="unhighlightTagCards()">' +
-            '<span class="tag-color type-' + ttype + '"></span>' +
-            '<span class="tag-name">' + et + '</span>' +
-            '<span class="tag-freq-bar"><span class="tag-freq-fill" style="width:' + pct + '%"></span></span>' +
-            '<span class="tag-count">' + count + '</span>' +
-            '<span class="tag-actions">' +
-            '<button class="tag-act tag-plus" onclick="event.stopPropagation();sidebarAddTag(\'' + et + '\')" title="Add to search">+</button>' +
-            '<button class="tag-act tag-minus" onclick="event.stopPropagation();sidebarExcludeTag(\'' + et + '\')" title="Exclude from search">-</button>' +
-            '<button class="tag-act tag-wiki" onclick="event.stopPropagation();openTagWiki(\'' + et + '\')" title="Open wiki">?</button>' +
-            '</span></div>';
-    }).join('');
-}
-
-function buildPairedTags(sortedTags, activeTags) {
-    const paired = sortedTags.filter(([tag]) => !activeTags.has(tag)).slice(0, 20);
-    if (!paired.length) { document.getElementById('pairedSection').style.display = 'none'; return; }
-    document.getElementById('pairedSection').style.display = 'block';
-    document.getElementById('pairedTags').innerHTML = paired.map(([tag]) => {
-        const et = esc(tag);
-        return '<span class="paired-chip" onclick="sidebarAddTag(\'' + et + '\')">' + et + '</span>';
-    }).join('');
-}
-
-function buildFreqTags(topTags, maxCount, activeTags) {
-    if (!topTags.length) { document.getElementById('freqSection').style.display = 'none'; return; }
-    document.getElementById('freqSection').style.display = 'block';
-    document.getElementById('freqTags').innerHTML = topTags.map(([tag, count]) => {
-        const pct = Math.round((count / maxCount) * 100);
-        const ttype = tagTypesCache[tag] || 'general';
-        const et = esc(tag);
-        return '<div class="sidebar-tag" onclick="sidebarAddTag(\'' + et + '\')">' +
-            '<span class="tag-color type-' + ttype + '"></span>' +
-            '<span class="tag-name">' + et + '</span>' +
-            '<span class="tag-freq-bar"><span class="tag-freq-fill" style="width:' + pct + '%"></span></span>' +
-            '<span class="tag-count">' + count + '</span></div>';
-    }).join('');
-}
-
-// ── Sidebar Tag Actions ──
-function sidebarTagClick(tag, event) {
-    if (event.ctrlKey || event.metaKey) {
-        sidebarAddTag(tag);
-    } else {
-        currentTags = [tag];
-        renderChips();
-        doSearch();
-    }
-}
-function sidebarAddTag(tag) {
-    if (!currentTags.includes(tag)) {
-        currentTags.push(tag);
-        renderChips();
-        doSearch();
-    }
-}
-function sidebarExcludeTag(tag) {
-    const negTag = '-' + tag;
-    if (!currentTags.includes(negTag)) {
-        currentTags.push(negTag);
-        renderChips();
-        doSearch();
-    }
-}
-function openTagWiki(tag) {
-    window.open('https://rule34.xxx/index.php?page=wiki&s=list&search=' + encodeURIComponent(tag), '_blank');
-}
-
-// ── Hover Reveal ──
-function setupGalleryDelegation() {
-    const gallery = document.getElementById('gallery');
-    gallery.addEventListener('mouseover', (e) => {
-        const card = e.target.closest('.card');
-        if (!card) return;
-        const tags = card.dataset.alltags;
-        if (tags) { hoveredCardTags = tags.split(' '); showHoverTags(hoveredCardTags); }
-    });
-    gallery.addEventListener('mouseout', (e) => {
-        const card = e.target.closest('.card');
-        if (card && !e.relatedTarget || !e.relatedTarget.closest('.card')) {
-            hoveredCardTags = null;
-            hideHoverTags();
-            unhighlightTagCards();
-        }
-    });
-}
-
-function showHoverTags(tagList) {
-    document.getElementById('hoverTagsSection').style.display = 'block';
-    document.getElementById('hoverTagsList').innerHTML = tagList.map(tag => {
-        const ttype = tagTypesCache[tag.toLowerCase()] || 'general';
-        const et = esc(tag);
-        return '<div class="sidebar-tag" onclick="sidebarAddTag(\'' + et + '\')" oncontextmenu="tagContextMenu(event, \'' + et + '\')">' +
-            '<span class="tag-color type-' + ttype + '"></span>' +
-            '<span class="tag-name">' + et + '</span>' +
-            '<span class="tag-actions">' +
-            '<button class="tag-act tag-plus" onclick="event.stopPropagation();sidebarAddTag(\'' + et + '\')">+</button>' +
-            '<button class="tag-act tag-minus" onclick="event.stopPropagation();sidebarExcludeTag(\'' + et + '\')">-</button>' +
-            '</span></div>';
-    }).join('');
-}
-
-function hideHoverTags() {
-    document.getElementById('hoverTagsSection').style.display = 'none';
-}
-
-function highlightTagCards(tag) {
-    document.querySelectorAll('.card').forEach(card => {
-        const ct = card.dataset.alltags || '';
-        if (ct.split(' ').includes(tag)) card.classList.add('sidebar-highlight');
-    });
-}
-function unhighlightTagCards() {
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('sidebar-highlight'));
-}
-
-// ── Right-click Context Menu ──
-function setupContextMenu() {
-    document.addEventListener('click', () => {
-        document.getElementById('contextMenu').classList.remove('open');
-    });
-}
-
-function tagContextMenu(event, tag) {
-    event.preventDefault();
-    event.stopPropagation();
-    _ctxTargetTag = tag;
-    const menu = document.getElementById('contextMenu');
-    const isNegated = tag.startsWith('-');
-    const cleanTag = isNegated ? tag.slice(1) : tag;
-    const isActive = currentTags.includes(tag);
-
-    menu.innerHTML =
-        '<div class="context-item" onclick="ctxSearchOnly()"><span class="ctx-icon">🔍</span>Search only this</div>' +
-        (isActive
-            ? '<div class="context-item" onclick="ctxRemove()"><span class="ctx-icon">✕</span>Remove from search</div>'
-            : '<div class="context-item" onclick="ctxAdd()"><span class="ctx-icon">+</span>Add to search</div>') +
-        (!isNegated
-            ? '<div class="context-item" onclick="ctxExclude()"><span class="ctx-icon">⊖</span>Exclude from search</div>'
-            : '') +
-        '<div class="context-sep"></div>' +
-        '<div class="context-item" onclick="ctxCopy()"><span class="ctx-icon">📋</span>Copy tag name</div>' +
-        '<div class="context-item" onclick="ctxWiki()"><span class="ctx-icon">📖</span>Open wiki</div>';
-
-    menu.classList.add('open');
-    menu.style.left = Math.min(event.clientX, window.innerWidth - 180) + 'px';
-    menu.style.top = Math.min(event.clientY, window.innerHeight - 200) + 'px';
-}
-
-function ctxSearchOnly() { currentTags = [_ctxTargetTag]; renderChips(); doSearch(); document.getElementById('contextMenu').classList.remove('open'); }
-function ctxAdd() { sidebarAddTag(_ctxTargetTag); document.getElementById('contextMenu').classList.remove('open'); }
-function ctxRemove() { currentTags = currentTags.filter(t => t !== _ctxTargetTag); renderChips(); doSearch(); document.getElementById('contextMenu').classList.remove('open'); }
-function ctxExclude() { sidebarExcludeTag(_ctxTargetTag); document.getElementById('contextMenu').classList.remove('open'); }
-function ctxCopy() { navigator.clipboard.writeText(_ctxTargetTag).catch(() => {}); document.getElementById('contextMenu').classList.remove('open'); }
-function ctxWiki() { openTagWiki(_ctxTargetTag); document.getElementById('contextMenu').classList.remove('open'); }
-
-// ── Saved Searches ──
-function getSavedSearches() {
-    try { return JSON.parse(localStorage.getItem('r34_saved_searches') || '[]'); }
-    catch(e) { return []; }
-}
-function saveSavedSearches(s) { localStorage.setItem('r34_saved_searches', JSON.stringify(s)); }
-function toggleSavedSearches() {
-    const dd = document.getElementById('savedDropdown');
-    if (dd.classList.contains('open')) { dd.classList.remove('open'); return; }
-    const searches = getSavedSearches();
-    if (!searches.length) {
-        dd.innerHTML = '<div style="padding:10px 14px;font-size:0.78rem;color:#a89060;">No saved searches. Click 💟 after searching to save.</div>';
-    } else {
-        dd.innerHTML = searches.map((s, i) =>
-            '<div class="saved-item" onclick="loadSavedSearch(' + i + ')"><span>' + esc(s) + '</span><span class="saved-del" onclick="event.stopPropagation();deleteSavedSearch(' + i + ')">✕</span></div>'
-        ).join('');
-    }
-    dd.classList.add('open');
-    setTimeout(() => {
-        document.addEventListener('click', function closeDD(e) {
-            if (!e.target.closest('.saved-searches')) { dd.classList.remove('open'); document.removeEventListener('click', closeDD); }
-        });
-    }, 10);
-}
-function saveCurrentSearch() {
-    const q = currentTags.join(' ');
-    if (!q) return;
-    const searches = getSavedSearches();
-    if (!searches.includes(q)) { searches.push(q); saveSavedSearches(searches); }
-}
-function loadSavedSearch(i) {
-    const searches = getSavedSearches();
-    if (searches[i]) { currentTags = searches[i].split(' '); renderChips(); document.getElementById('savedDropdown').classList.remove('open'); doSearch(); }
-}
-function deleteSavedSearch(i) {
-    const searches = getSavedSearches();
-    searches.splice(i, 1);
-    saveSavedSearches(searches);
-    toggleSavedSearches();
-}
-
-// ── Keyboard Shortcuts ──
-function setupKeyboardShortcuts() {
-    document.addEventListener('keydown', (e) => {
-        const tag = e.target.tagName;
-        const isInput = tag === 'INPUT' || tag === 'TEXTAREA';
-        if (e.ctrlKey && e.key === 'b') { e.preventDefault(); toggleSidebar(); return; }
-        if (e.ctrlKey && e.key === 'd') { e.preventDefault(); cycleDensity(); return; }
-        if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveCurrentSearch(); return; }
-        if (!isInput && e.key === 's') { e.preventDefault(); document.getElementById('tagInput').focus(); return; }
-        if (!isInput && e.key === 'a') { e.preventDefault(); selectAllPage(); return; }
-        if (!isInput && e.key === 'd') { e.preventDefault(); downloadSelected(); return; }
-        if (e.key === 'Escape') {
-            if (document.getElementById('previewOverlay').classList.contains('show')) { hidePreview(); return; }
-            if (document.getElementById('contextMenu').classList.contains('open')) { document.getElementById('contextMenu').classList.remove('open'); return; }
-            if (!isInput && selectedIds.size > 0) { deselectAll(); return; }
-        }
-        if (!isInput && (e.key === 'j' || e.key === 'k')) {
-            e.preventDefault();
-            navigateCards(e.key === 'j' ? 1 : -1);
-        }
-    });
-}
-function navigateCards(dir) {
-    const cards = document.querySelectorAll('#gallery .card');
-    if (!cards.length) return;
-    if (_focusedCardIdx >= 0) cards[_focusedCardIdx].classList.remove('sidebar-highlight');
-    _focusedCardIdx = Math.max(0, Math.min(cards.length - 1, _focusedCardIdx + dir));
-    cards[_focusedCardIdx].classList.add('sidebar-highlight');
-    cards[_focusedCardIdx].scrollIntoView({behavior: 'smooth', block: 'nearest'});
-}
-
-// ── Status Icon ──
-function loadStatus() {
-    fetch('/api/status')
-        .then(r => r.json())
-        .then(s => {
-            const h1 = document.getElementById('topIcon');
-            if (s.configured) {
-                h1.textContent = '🔞';
-                h1.title = 'Logged in as ...' + s.user_id;
-            } else {
-                h1.textContent = '⚠️';
-                h1.title = 'Not configured — click ⚙ to set API credentials';
-                h1.style.cursor = 'pointer';
-                h1.onclick = () => openSettings();
-            }
-        }).catch(() => {});
-}
-
 </script>
 </body>
 </html>
 """
+
 
 @app.route("/")
 def index():
