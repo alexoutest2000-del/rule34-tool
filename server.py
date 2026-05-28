@@ -805,9 +805,9 @@ body {
         </div>
         <div class="tag-suggestions" id="tagSuggestions"></div>
     </div>
-    <butt    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle tag sidebar (Ctrl+B)">☰</button>
+    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle tag sidebar (Ctrl+B)">☰</button>
     <h1 id="topIcon">🔞</h1>
-on class="primary" id="searchBtn" onclick="doSearch()">🔍 Search</button>
+    <button class="primary" id="searchBtn" onclick="doSearch()">🔍 Search</button>
         <div class="saved-searches">
         <button class="icon-btn" onclick="toggleSavedSearches()" title="Saved searches">💟</button>
         <div class="saved-dropdown" id="savedDropdown"></div>
