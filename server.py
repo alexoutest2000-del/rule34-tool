@@ -398,68 +398,41 @@ body {
     background: #f5ede0; color: #2a1f10;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     min-height: 100vh; display: flex; flex-direction: column;
+    padding-bottom: 80px;
 }
-
-/* ── Layout ── */
-.app-layout { display: flex; flex: 1; min-height: 0; }
-.sidebar {
-    width: 280px; min-width: 280px; background: #faf6ef;
-    border-right: 1px solid #d4c4a8; overflow-y: auto;
-    display: flex; flex-direction: column;
-    transition: width 0.2s, min-width 0.2s;
-}
-.sidebar.collapsed { width: 0; min-width: 0; overflow: hidden; border-right: none; }
-.main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-
 /* ── Topbar ── */
 .topbar {
     position: sticky; top: 0; z-index: 100;
     background: #f0e6d4ee; backdrop-filter: blur(12px);
     border-bottom: 1px solid #d4c4a8;
-    padding: 10px 16px;
+    padding: 12px 20px;
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
-.topbar h1 { font-size: 1rem; color: #3a2a10; margin-right: 4px; white-space: nowrap; cursor: default; }
-.topbar .sidebar-toggle {
-    background: none; border: none; color: #8a7050; cursor: pointer;
-    font-size: 1.1rem; padding: 4px 8px; border-radius: 4px;
-}
-.topbar .sidebar-toggle:hover { background: #e8dece; color: #5a4030; }
-.topbar button {
-    padding: 8px 14px; border: 1px solid #c8b488; border-radius: 8px;
-    background: #fff; color: #5a4030; cursor: pointer;
-    font-size: 0.82rem; transition: all 0.15s; white-space: nowrap;
-}
-.topbar button:hover { background: #f0e6d4; border-color: #a89060; }
-.topbar button.primary { background: #c87c2e; border-color: #c87c2e; color: #fff; font-weight: 600; padding: 9px 18px; font-size: 0.9rem; }
-.topbar button.primary:hover { background: #a86820; }
-.topbar button.icon-btn { padding: 8px 12px; font-size: 0.95rem; }
-.topbar button.active { background: #c87c2e; border-color: #c87c2e; color: #fff; }
-.topbar button:disabled { opacity: 0.5; cursor: not-allowed; }
-.topbar .sep { width: 1px; height: 24px; background: #d4c4a8; margin: 0 4px; }
+.topbar h1 { font-size: 1rem; color: #3a2a10; margin-right: 6px; white-space: nowrap; }
+.topbar input[type="number"] { width: 70px; }
 
 /* ── Tag input ── */
 .tag-area {
-    flex: 1; min-width: 180px; display: flex; flex-wrap: wrap; gap: 5px;
-    padding: 6px 8px; border: 1px solid #c8b488; border-radius: 8px;
-    background: #fff; min-height: 38px; align-items: center;
+    flex: 1; min-width: 220px; display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 8px 10px; border: 1px solid #c8b488; border-radius: 8px;
+    background: #fff; min-height: 42px; align-items: center;
     cursor: text; transition: border-color 0.15s;
 }
 .tag-area:focus-within { border-color: #c87c2e; }
 .tag-area input {
     border: none; background: transparent; outline: none;
-    font-size: 0.88rem; color: #2a1f10; min-width: 80px; flex: 1;
+    font-size: 0.9rem; color: #2a1f10; min-width: 120px; flex: 1;
     padding: 2px;
 }
 .tag-chip {
-    display: flex; align-items: center; gap: 3px;
+    display: flex; align-items: center; gap: 4px;
     background: #f0e6d4; border: 1px solid #d4c4a8; border-radius: 20px;
-    padding: 2px 6px 2px 8px; font-size: 0.76rem; color: #5a4030;
-    white-space: nowrap; max-width: 150px; cursor: default;
+    padding: 3px 8px 3px 10px; font-size: 0.78rem; color: #5a4030;
+    white-space: nowrap; max-width: 160px;
 }
 .tag-chip span { overflow: hidden; text-overflow: ellipsis; }
 .tag-chip .remove-tag {
-    cursor: pointer; color: #a89060; font-size: 0.8rem; line-height: 1;
+    cursor: pointer; color: #a89060; font-size: 0.85rem; line-height: 1;
     padding: 0 1px;
 }
 .tag-chip .remove-tag:hover { color: #c83020; }
@@ -476,10 +449,208 @@ body {
 .tag-suggestion {
     padding: 8px 14px; font-size: 0.85rem; color: #5a4030;
     cursor: pointer; transition: background 0.1s;
-    display: flex; justify-content: space-between; align-items: center;
 }
 .tag-suggestion:hover, .tag-suggestion.highlighted { background: #f0e6d4; }
-.tag-suggestion .sug-type { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
+
+/* ── Topbar buttons ── */
+.topbar button {
+    padding: 9px 18px; border: 1px solid #c8b488; border-radius: 8px;
+    background: #fff; color: #5a4030; cursor: pointer;
+    font-size: 0.88rem; transition: all 0.15s; white-space: nowrap;
+}
+.topbar button:hover { background: #f0e6d4; border-color: #a89060; }
+.topbar button.primary { background: #c87c2e; border-color: #c87c2e; color: #fff; font-size: 0.95rem; padding: 10px 24px; font-weight: 600; }
+.topbar button.primary:hover { background: #a86820; }
+.topbar button.icon-btn { padding: 9px 14px; font-size: 1rem; }
+.topbar button.active { background: #c87c2e; border-color: #c87c2e; color: #fff; }
+.topbar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Download bar ── */
+.download-bar {
+    display: flex; align-items: center; gap: 14px; padding: 10px 20px;
+    background: #fff; border-bottom: 1px solid #d4c4a8;
+    flex-wrap: wrap;
+}
+.download-bar.hidden { display: none; }
+.download-bar .dl-count { font-size: 0.85rem; color: #5a4030; white-space: nowrap; }
+.download-bar .dl-count strong { color: #c87c2e; font-size: 1rem; }
+.dl-progress-wrap { flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px; }
+.dl-progress-bar { flex: 1; height: 8px; background: #d4c4a8; border-radius: 4px; overflow: hidden; }
+.dl-progress-fill { height: 100%; background: #c87c2e; border-radius: 4px; transition: width 0.4s; width: 0%; }
+.dl-progress-text { font-size: 0.78rem; color: #8a7050; white-space: nowrap; min-width: 60px; }
+.download-bar button { font-size: 0.88rem; }
+
+/* ── Tabs ── */
+.tabs {
+    display: flex; padding: 0 20px; gap: 0;
+    background: #f5ede0; border-bottom: 1px solid #d4c4a8;
+}
+.tab {
+    padding: 10px 20px; cursor: pointer; font-size: 0.88rem;
+    color: #8a7050; border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+}
+.tab:hover { color: #5a4030; }
+.tab.active { color: #c87c2e; border-bottom-color: #c87c2e; }
+
+/* ── Panels ── */
+.panel { display: none; flex: 1; }
+.panel.active { display: flex; flex-direction: column; }
+
+/* ── Status bar ── */
+.status-bar {
+    padding: 8px 20px; font-size: 0.78rem; color: #8a7050;
+    border-bottom: 1px solid #d4c4a8; min-height: 28px;
+}
+
+/* ── Gallery ── */
+.gallery {
+    flex: 1; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px; padding: 16px 20px; align-content: start;
+}
+.card {
+    position: relative; background: #fff; border: 1px solid #d4c4a8;
+    border-radius: 10px; overflow: hidden;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; cursor: pointer;
+}
+.card:hover { border-color: #c87c2e; transform: translateY(-2px); box-shadow: 0 4px 16px #c87c2e22; }
+.card.selected { border-color: #c87c2e; box-shadow: 0 0 16px #c87c2e33; }
+.card .sel {
+    position: absolute; top: 8px; left: 8px; z-index: 10;
+    width: 20px; height: 20px; accent-color: #c87c2e; cursor: pointer;
+}
+.card .thumb {
+    width: 100%; height: 190px; object-fit: cover;
+    display: block; background: #f0e6d4;
+}
+.card .meta {
+    padding: 7px 10px; font-size: 0.72rem;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.card .meta .dims { color: #8a7050; }
+.card .meta .rating {
+    padding: 1px 6px; border-radius: 3px;
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+}
+.rating.explicit { background: #c83020; color: #fff; }
+.rating.questionable { background: #c88a1a; color: #fff; }
+.rating.safe { background: #3a7840; color: #fff; }
+.card .tags {
+    padding: 0 10px 7px; font-size: 0.62rem; color: #8a7050;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.empty, .loading {
+    grid-column: 1 / -1; text-align: center;
+    padding: 60px 20px; color: #a89060; font-size: 0.95rem;
+}
+.loading { color: #8a7050; }
+
+/* ── Downloads panel ── */
+.downloads-header {
+    padding: 12px 20px; display: flex; gap: 10px; align-items: center;
+    flex-wrap: wrap; border-bottom: 1px solid #d4c4a8;
+}
+.downloads-stats { display: flex; gap: 20px; font-size: 0.82rem; color: #8a7050; }
+.downloads-stats span { color: #c87c2e; font-weight: 600; }
+.file-list { flex: 1; overflow-y: auto; padding: 12px 20px; }
+.file-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px; border-radius: 6px;
+    border: 1px solid transparent; transition: all 0.1s;
+}
+.file-item:hover { background: #f0e6d4; border-color: #d4c4a8; }
+.file-item input[type="checkbox"] { accent-color: #c87c2e; cursor: pointer; }
+.file-item .fname { flex: 1; font-size: 0.85rem; color: #3a2a10; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-item .fsize { font-size: 0.75rem; color: #8a7050; white-space: nowrap; }
+.file-item .fdel { color: #a89060; cursor: pointer; font-size: 0.8rem; }
+.file-item .fdel:hover { color: #c83020; }
+
+/* ── Settings panel ── */
+.settings-overlay {
+    display: none; position: fixed; inset: 0;
+    background: #00000066; z-index: 500; align-items: center; justify-content: center;
+}
+.settings-overlay.open { display: flex; }
+.settings-panel {
+    background: #fff; border: 1px solid #d4c4a8; border-radius: 12px;
+    width: 480px; max-width: 95vw; padding: 0; overflow: hidden;
+    box-shadow: 0 8px 32px #00000033;
+}
+.settings-header {
+    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #d4c4a8;
+}
+.settings-header h2 { font-size: 1rem; color: #3a2a10; }
+.settings-header .close-btn {
+    background: none; border: none; color: #8a7050; cursor: pointer;
+    font-size: 1.2rem; padding: 4px 8px;
+}
+.settings-header .close-btn:hover { color: #5a4030; }
+.settings-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.settings-body label {
+    display: block; font-size: 0.78rem; color: #8a7050; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.05em;
+}
+.settings-body input, .settings-body select {
+    width: 100%; padding: 10px 12px; border: 1px solid #c8b488;
+    border-radius: 8px; background: #fff; color: #2a1f10;
+    font-size: 0.88rem; outline: none; transition: border-color 0.15s;
+}
+.settings-body input:focus, .settings-body select:focus { border-color: #c87c2e; }
+.settings-body input[type="password"] { font-family: monospace; }
+.settings-body .field-hint { font-size: 0.72rem; color: #8a7050; margin-top: 4px; }
+.settings-body .field-hint code {
+    background: #f5ede0; padding: 1px 5px; border-radius: 3px;
+    color: #c87c2e; font-size: 0.75rem;
+}
+.settings-footer {
+    padding: 14px 20px; border-top: 1px solid #d4c4a8;
+    display: flex; justify-content: flex-end; gap: 10px;
+}
+.settings-footer button.test-btn {
+    background: #f0e6d4; border-color: #c8b488; color: #5a4030; margin-right: auto;
+}
+.settings-footer button.test-btn:hover { background: #e8dece; }
+.status-msg { padding: 6px 0; font-size: 0.8rem; min-height: 20px; }
+.status-msg.ok { color: #3a7840; }
+.status-msg.err { color: #c83020; }
+
+/* ── Preview overlay ── */
+.preview-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: #000000cc; align-items: center; justify-content: center;
+}
+.preview-overlay.show { display: flex; }
+.preview-overlay img, .preview-overlay video {
+    max-width: 90vw; max-height: 90vh; border-radius: 8px;
+    box-shadow: 0 4px 32px #00000066; object-fit: contain;
+}
+.preview-overlay .preview-close {
+    position: absolute; top: 16px; right: 24px;
+    color: #fff; font-size: 2rem; cursor: pointer; z-index: 1001;
+    opacity: 0.6; transition: opacity 0.15s;
+}
+.preview-overlay .preview-close:hover { opacity: 1; }
+
+/* ── Layout ── */
+.app-layout { display: flex; flex: 1; min-height: 0; }
+.sidebar {
+    width: 280px; min-width: 280px; background: #faf6ef;
+    border-right: 1px solid #d4c4a8; overflow-y: auto;
+    display: flex; flex-direction: column;
+    transition: width 0.2s, min-width 0.2s;
+}
+.sidebar.collapsed { width: 0; min-width: 0; overflow: hidden; border-right: none; }
+.main-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* ── Topbar additions ── */
+.topbar .sidebar-toggle {
+    background: none; border: none; color: #8a7050; cursor: pointer;
+    font-size: 1.1rem; padding: 4px 8px; border-radius: 4px;
+}
+.topbar .sidebar-toggle:hover { background: #e8dece; color: #5a4030; }
+.topbar .sep { width: 1px; height: 24px; background: #d4c4a8; margin: 0 4px; }
 
 /* ── Saved searches ── */
 .saved-searches { position: relative; display: inline-block; }
@@ -499,53 +670,12 @@ body {
 .saved-item .saved-del { color: #a89060; font-size: 0.75rem; }
 .saved-item .saved-del:hover { color: #c83020; }
 
-/* ── Selection / Download bars ── */
-.selection-bar, .download-bar {
-    display: flex; align-items: center; gap: 10px; padding: 8px 16px;
-    background: #fff; border-bottom: 1px solid #d4c4a8; flex-wrap: wrap;
-}
-.selection-bar.hidden, .download-bar.hidden { display: none; }
-.selection-bar .sel-info { font-size: 0.82rem; color: #5a4030; white-space: nowrap; }
-.selection-bar .sel-info strong { color: #c87c2e; font-size: 0.95rem; }
-.dl-progress-wrap { flex: 1; min-width: 120px; display: flex; align-items: center; gap: 10px; }
-.dl-progress-bar { flex: 1; height: 6px; background: #d4c4a8; border-radius: 3px; overflow: hidden; }
-.dl-progress-fill { height: 100%; background: #c87c2e; border-radius: 3px; transition: width 0.4s; width: 0%; }
-.dl-progress-text { font-size: 0.78rem; color: #8a7050; white-space: nowrap; min-width: 50px; }
-
-/* ── Tabs ── */
-.tabs {
-    display: flex; padding: 0 16px; gap: 0;
-    background: #f5ede0; border-bottom: 1px solid #d4c4a8;
-}
-.tab {
-    padding: 10px 16px; cursor: pointer; font-size: 0.85rem;
-    color: #8a7050; border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-}
-.tab:hover { color: #5a4030; }
-.tab.active { color: #c87c2e; border-bottom-color: #c87c2e; }
-
-/* ── Panels ── */
-.panel { display: none; flex: 1; }
-.panel.active { display: flex; flex-direction: column; }
-.status-bar {
-    padding: 8px 16px; font-size: 0.78rem; color: #8a7050;
-    border-bottom: 1px solid #d4c4a8; min-height: 28px;
-}
-
-/* ── Gallery ── */
-.gallery {
-    flex: 1; display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px; padding: 12px 16px; align-content: start;
-}
-/* Compact density */
+/* ── Gallery density modes ── */
 .gallery.compact { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; padding: 8px 12px; }
 .gallery.compact .card .thumb { height: 130px; }
 .gallery.compact .card .meta { padding: 4px 6px; font-size: 0.65rem; }
 .gallery.compact .card .tags { padding: 0 6px 4px; font-size: 0.55rem; }
 .gallery.compact .card .sel { width: 16px; height: 16px; top: 4px; left: 4px; }
-/* List density */
 .gallery.list {
     grid-template-columns: 1fr; gap: 2px; padding: 4px 16px;
 }
@@ -562,43 +692,8 @@ body {
 .gallery.list .card .list-id { font-size: 0.7rem; color: #a89060; flex-shrink: 0; min-width: 60px; }
 .gallery.list .card .list-rating { flex-shrink: 0; }
 
-/* ── Cards ── */
-.card {
-    position: relative; background: #fff; border: 1px solid #d4c4a8;
-    border-radius: 10px; overflow: hidden;
-    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s; cursor: pointer;
-}
-.card:hover { border-color: #c87c2e; transform: translateY(-2px); box-shadow: 0 4px 16px #c87c2e22; }
-.card.selected { border-color: #c87c2e; box-shadow: 0 0 16px #c87c2e33; }
+/* ── Card highlight ── */
 .card.sidebar-highlight { border-color: #5b8c5a; box-shadow: 0 0 12px #5b8c5a33; }
-.card .sel {
-    position: absolute; top: 8px; left: 8px; z-index: 10;
-    width: 20px; height: 20px; accent-color: #c87c2e; cursor: pointer;
-}
-.card .thumb {
-    width: 100%; height: 190px; object-fit: cover;
-    display: block; background: #f0e6d4;
-}
-.card .meta {
-    padding: 5px 8px; font-size: 0.7rem;
-    display: flex; justify-content: space-between; align-items: center;
-}
-.card .meta .dims { color: #8a7050; }
-.card .meta .rating {
-    padding: 1px 5px; border-radius: 3px;
-    font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
-}
-.rating.explicit { background: #c83020; color: #fff; }
-.rating.questionable { background: #c88a1a; color: #fff; }
-.rating.safe { background: #3a7840; color: #fff; }
-.card .tags {
-    padding: 0 8px 6px; font-size: 0.6rem; color: #8a7050;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.empty, .loading {
-    grid-column: 1 / -1; text-align: center;
-    padding: 60px 20px; color: #a89060; font-size: 0.95rem;
-}
 
 /* ── Sidebar sections ── */
 .sidebar-section { padding: 10px 0; border-bottom: 1px solid #e8dece; }
@@ -680,73 +775,8 @@ body {
 }
 .paired-chip:hover { background: #c87c2e; border-color: #c87c2e; color: #fff; }
 
-/* ── Downloads panel ── */
-.downloads-header {
-    padding: 10px 16px; display: flex; gap: 8px; align-items: center;
-    flex-wrap: wrap; border-bottom: 1px solid #d4c4a8;
-}
-.downloads-stats { display: flex; gap: 16px; font-size: 0.8rem; color: #8a7050; }
-.downloads-stats span { color: #c87c2e; font-weight: 600; }
-.file-list { flex: 1; overflow-y: auto; padding: 10px 16px; }
-.file-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 7px 10px; border-radius: 6px;
-    border: 1px solid transparent; transition: all 0.1s;
-}
-.file-item:hover { background: #f0e6d4; border-color: #d4c4a8; }
-.file-item input[type="checkbox"] { accent-color: #c87c2e; cursor: pointer; }
-.file-item .fname { flex: 1; font-size: 0.83rem; color: #3a2a10; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-item .fsize { font-size: 0.73rem; color: #8a7050; white-space: nowrap; }
-.file-item .fdel { color: #a89060; cursor: pointer; font-size: 0.8rem; }
-.file-item .fdel:hover { color: #c83020; }
-
-/* ── Settings panel ── */
-.settings-overlay {
-    display: none; position: fixed; inset: 0;
-    background: #00000066; z-index: 500; align-items: center; justify-content: center;
-}
-.settings-overlay.open { display: flex; }
-.settings-panel {
-    background: #fff; border: 1px solid #d4c4a8; border-radius: 12px;
-    width: 480px; max-width: 95vw; padding: 0; overflow: hidden;
-    box-shadow: 0 8px 32px #00000033;
-}
-.settings-header {
-    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid #d4c4a8;
-}
-.settings-header h2 { font-size: 1rem; color: #3a2a10; }
-.settings-header .close-btn {
-    background: none; border: none; color: #8a7050; cursor: pointer;
-    font-size: 1.2rem; padding: 4px 8px;
-}
-.settings-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-.settings-body label { display: block; font-size: 0.76rem; color: #8a7050; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
-.settings-body input { width: 100%; padding: 9px 12px; border: 1px solid #c8b488; border-radius: 8px; background: #fff; color: #2a1f10; font-size: 0.86rem; outline: none; }
-.settings-body input:focus { border-color: #c87c2e; }
-.settings-body .field-hint { font-size: 0.7rem; color: #8a7050; margin-top: 3px; }
-.settings-body .field-hint code { background: #f5ede0; padding: 1px 4px; border-radius: 3px; color: #c87c2e; font-size: 0.72rem; }
-.settings-footer { padding: 12px 20px; border-top: 1px solid #d4c4a8; display: flex; justify-content: flex-end; gap: 8px; }
-.status-msg { padding: 6px 0; font-size: 0.78rem; min-height: 18px; }
-.status-msg.ok { color: #3a7840; }
-.status-msg.err { color: #c83020; }
-
-/* ── Preview overlay ── */
-.preview-overlay {
-    display: none; position: fixed; inset: 0; z-index: 1000;
-    background: #000000cc; align-items: center; justify-content: center;
-}
-.preview-overlay.show { display: flex; }
-.preview-overlay img, .preview-overlay video {
-    max-width: 90vw; max-height: 90vh; border-radius: 8px;
-    box-shadow: 0 4px 32px #00000066; object-fit: contain;
-}
-.preview-overlay .preview-close {
-    position: absolute; top: 16px; right: 24px;
-    color: #fff; font-size: 2rem; cursor: pointer; z-index: 1001;
-    opacity: 0.6;
-}
-.preview-overlay .preview-close:hover { opacity: 1; }
+/* ── Autocomplete type label ── */
+.tag-suggestion .sug-type { font-size: 0.65rem; opacity: 0.6; text-transform: uppercase; }
 
 /* ── Responsive ── */
 @media (max-width: 800px) {
@@ -761,42 +791,43 @@ body {
 <div class="preview-overlay" id="previewOverlay" onclick="closePreview(event)">
     <span class="preview-close" onclick="hidePreview()">✕</span>
     <div id="previewContent" onclick="event.stopPropagation()"></div>
-</div>
 
 <!-- Context menu -->
 <div class="context-menu" id="contextMenu"></div>
+</div>
 
 <!-- Top bar -->
 <div class="topbar">
-    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle tag sidebar (Ctrl+B)">☰</button>
-    <h1 id="topIcon">🔞</h1>
-    <div class="autocomplete-wrap" style="flex:1;min-width:180px;position:relative">
+    
+    <div class="autocomplete-wrap" style="flex:1;min-width:220px;position:relative">
         <div class="tag-area" id="tagArea">
             <input type="text" id="tagInput" placeholder="Type tags..." autofocus autocomplete="off" />
         </div>
         <div class="tag-suggestions" id="tagSuggestions"></div>
     </div>
-    <button class="primary" id="searchBtn" onclick="doSearch()">🔍 Search</button>
-    <div class="saved-searches">
+    <butt    <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle tag sidebar (Ctrl+B)">☰</button>
+    <h1 id="topIcon">🔞</h1>
+on class="primary" id="searchBtn" onclick="doSearch()">🔍 Search</button>
+        <div class="saved-searches">
         <button class="icon-btn" onclick="toggleSavedSearches()" title="Saved searches">💟</button>
         <div class="saved-dropdown" id="savedDropdown"></div>
     </div>
     <span class="sep"></span>
     <button class="icon-btn" onclick="cycleDensity()" id="densityBtn" title="View density (Ctrl+D)">⊞</button>
-    <button class="icon-btn" onclick="openSettings()">⚙</button>
+<button class="icon-btn" onclick="openSettings()">⚙</button>
 </div>
 
-<!-- Selection bar -->
-<div class="selection-bar hidden" id="selectionBar">
-    <div class="sel-info"><strong id="selCountNum">0</strong> results &nbsp;|&nbsp; <strong id="selPageNum">0</strong> selected</div>
+<!-- Selection bar (visible after search) -->
+<div class="download-bar hidden" id="selectionBar">
+    <div class="dl-count"><strong id="selCountNum">0</strong> results &nbsp;|&nbsp; <strong id="selPageNum">0</strong> selected</div>
     <button onclick="selectAllPage()">Select All</button>
     <button onclick="deselectAll()">Deselect</button>
     <button class="primary" id="dlBtn" onclick="downloadSelected()" disabled>⬇ Download (<span id="dlCount">0</span>)</button>
 </div>
 
-<!-- Download bar -->
+<!-- Download bar (visible when items selected) -->
 <div class="download-bar hidden" id="downloadBar">
-    <div class="sel-info"><strong id="dlCountNum">0</strong> selected</div>
+    <div class="dl-count"><strong id="dlCountNum">0</strong> selected</div>
     <div class="dl-progress-wrap">
         <div class="dl-progress-bar"><div class="dl-progress-fill" id="dlProgressFill"></div></div>
         <span class="dl-progress-text" id="dlProgressText">0%</span>
@@ -806,12 +837,6 @@ body {
 </div>
 
 <!-- Tabs -->
-<div class="tabs">
-    <div class="tab active" id="tabSearch" onclick="switchTab('search')">🔍 Search</div>
-    <div class="tab" id="tabDownloads" onclick="switchTab('downloads')">📁 Downloads</div>
-</div>
-
-<!-- Main layout: sidebar + content -->
 <div class="app-layout">
     <!-- Tag Sidebar -->
     <div class="sidebar" id="tagSidebar">
@@ -835,34 +860,41 @@ body {
             Search to see tags
         </div>
     </div>
-
     <!-- Main content -->
     <div class="main-area">
-        <!-- Search panel -->
-        <div class="panel active" id="panelSearch">
-            <div class="status-bar" id="statusBar">Type tags and press Enter or click Search. <small style="color:#a89060">Shortcuts: s=focus search, a=select all, d=download, Esc=clear, Ctrl+B=toggle sidebar, Ctrl+D=cycle density</small></div>
-            <div class="gallery" id="gallery">
-                <div class="empty"><p>Search for something to get started</p></div>
-            </div>
-        </div>
+<div class="tabs">
+    <div class="tab active" id="tabSearch" onclick="switchTab('search')">🔍 Search</div>
+    <div class="tab" id="tabDownloads" onclick="switchTab('downloads')">📁 Downloads</div>
+</div>
 
-        <!-- Downloads panel -->
-        <div class="panel" id="panelDownloads">
-            <div class="downloads-header">
-                <div class="downloads-stats" id="downloadsStats"><span>0 files</span><span>0 MB</span></div>
-                <button onclick="selectAllFiles()">Select All</button>
-                <button onclick="deselectAllFiles()">Deselect All</button>
-                <button onclick="deleteSelectedFiles()" style="color:#c83020">Delete Selected</button>
-                <button onclick="loadFiles()">↻ Refresh</button>
-            </div>
-            <div class="file-list" id="fileList">
-                <div class="empty"><p>No downloaded files yet.</p></div>
-            </div>
+<!-- Search panel -->
+<div class="panel active" id="panelSearch">
+    <div class="status-bar" id="statusBar">Type tags and press Enter or click Search. <small style="color:#a89060">Shortcuts: s=focus search, a=select all, d=download, Esc=clear, Ctrl+B=toggle sidebar, Ctrl+D=cycle density, j/k=navigate</small></div>
+    <div class="gallery" id="gallery">
+        <div class="empty"><p>Search for something to get started</p></div>
+    </div>
+</div>
+
+<!-- Downloads panel -->
+<div class="panel" id="panelDownloads">
+    <div class="downloads-header">
+        <div class="downloads-stats" id="downloadsStats">
+            <span>0 files</span><span>0 MB</span>
         </div>
+        <button onclick="selectAllFiles()">Select All</button>
+        <button onclick="deselectAllFiles()">Deselect All</button>
+        <button onclick="deleteSelectedFiles()" style="color:#c83020">Delete Selected</button>
+        <button onclick="loadFiles()">↻ Refresh</button>
+    </div>
+    <div class="file-list" id="fileList">
+        <div class="empty"><p>No downloaded files yet.</p></div>
     </div>
 </div>
 
 <!-- Settings overlay -->
+
+    </div><!-- main-area -->
+</div><!-- app-layout -->
 <div class="settings-overlay" id="settingsOverlay">
     <div class="settings-panel">
         <div class="settings-header">
@@ -870,42 +902,56 @@ body {
             <button class="close-btn" onclick="closeSettings()">✕</button>
         </div>
         <div class="settings-body">
-            <div id="apiStatusBanner" style="padding:10px 14px;border-radius:8px;font-size:0.8rem;margin-bottom:4px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;">
+            <div id="apiStatusBanner" style="padding:10px 14px;border-radius:8px;font-size:0.82rem;margin-bottom:4px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;">
                 ⚠ API not configured. Paste your credentials below.
             </div>
-            <div><label>API Credentials (rule34.xxx format)</label>
+            <div>
+                <label>API Credentials (rule34.xxx format)</label>
                 <input type="text" id="cfgCredentials" placeholder="&api_key=...&user_id=..." />
                 <div class="field-hint">Paste the full query string from your rule34 account page:<br/><code>&amp;api_key=YOUR_KEY&amp;user_id=YOUR_ID</code></div>
             </div>
-            <div><label>API Delay (s)</label><input type="number" id="cfgDelay" value="1.0" min="0.1" max="10" step="0.1" /></div>
-            <div><label>HTTP Timeout (s)</label><input type="number" id="cfgTimeout" value="30" min="5" max="120" /></div>
-            <div><label>Download Directory</label><input type="text" id="cfgDownloadDir" value="./downloads" /></div>
+            <div>
+                <label>API Delay (seconds between requests)</label>
+                <input type="number" id="cfgDelay" value="1.0" min="0.1" max="10" step="0.1" />
+            </div>
+            <div>
+                <label>HTTP Timeout (seconds)</label>
+                <input type="number" id="cfgTimeout" value="30" min="5" max="120" />
+            </div>
+            <div>
+                <label>Download Directory</label>
+                <input type="text" id="cfgDownloadDir" value="./downloads" />
+            </div>
             <div class="status-msg" id="cfgStatus"></div>
         </div>
         <div class="settings-footer">
-            <button class="test-btn" onclick="testConnection()" style="margin-right:auto">Test Connection</button>
+            <button class="test-btn" onclick="testConnection()">Test Connection</button>
             <button onclick="closeSettings()">Close</button>
             <button class="primary" onclick="saveConfig()">Save Settings</button>
         </div>
     </div>
 </div>
 
-<!-- Debug log -->
-<div id="debugLog" style="position:fixed;bottom:0;left:0;right:0;z-index:999;background:#0d0d0dee;color:#0f0;font-family:monospace;font-size:0.65rem;max-height:100px;overflow-y:auto;padding:4px 8px;border-top:1px solid #333;display:none;"></div>
-
+<!-- Debug log (visible on page) -->
+<div id="debugLog" style="position:fixed;bottom:0;left:0;right:0;z-index:999;background:#0d0d0dee;color:#0f0;font-family:monospace;font-size:0.7rem;max-height:120px;overflow-y:auto;padding:6px 12px;border-top:1px solid #333;display:none;"></div>
 <script>
-// ── Debug ──
+// ── Debug helpers ──
 window._debugLog = [];
 const MAX_DEBUG = 50;
 function debug(msg) {
     window._debugLog.push(new Date().toISOString().slice(11,23) + ' ' + msg);
     if (window._debugLog.length > MAX_DEBUG) window._debugLog.shift();
     const el = document.getElementById('debugLog');
-    if (el) { el.style.display = 'block'; el.textContent = window._debugLog.join('\\n'); el.scrollTop = el.scrollHeight; }
+    if (el) {
+        el.style.display = 'block';
+        el.textContent = window._debugLog.join('\\n');
+        el.scrollTop = el.scrollHeight;
+    }
 }
+// Override console.log to also write to debug panel
 const _origLog = console.log;
 console.log = function(...args) { _origLog.apply(console, args); debug(args.join(' ')); };
-console.error = function(...args) { _origLog.apply(console, args); debug('ERR: ' + args.join(' ')); };
+console.error = function(...args) { _origLog.apply(console, args); debug('ERROR: ' + args.join(' ')); };
 </script>
 
 <script>
@@ -917,18 +963,17 @@ let activeDlId = null;
 let tagSuggestions = [];
 let highlightedSuggestion = -1;
 let searchDone = false;
-let currentTags = [];
-let allPosts = [];
-let currentPage = 0;
-const PAGE_SIZE = 50;
 let sidebarOpen = true;
-let densityMode = 0; // 0=large, 1=compact, 2=list
-let tagTypesCache = {}; // {tag: "general"|"artist"|...}
+let densityMode = 0;
+let tagTypesCache = {};
 let hoveredCardTags = null;
+let _focusedCardIdx = -1;
+let _ctxTargetTag = null;
+let currentTags = [];
 
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('[init] Page loaded');
+    console.log('[init] Page loaded. currentTags:', JSON.stringify(currentTags));
     loadStatus();
     loadFiles();
     loadSettings();
@@ -937,54 +982,59 @@ window.addEventListener('DOMContentLoaded', () => {
     setupKeyboardShortcuts();
     setupContextMenu();
     setupGalleryDelegation();
-    console.log('[init] Ready. Shortcuts: s,a,d,Esc,Ctrl+B,Ctrl+D,j,k');
+    // Restore sidebar state
+    if (localStorage.getItem('r34_sidebar') === '0') {
+        sidebarOpen = false;
+        document.getElementById('tagSidebar').classList.add('collapsed');
+    }
+    console.log('[init] setupTagInput done. currentTags:', JSON.stringify(currentTags));
+
+    // Preview delegation on gallery — show on hover, close on click outside
+    const gallery = document.getElementById('gallery');
+    gallery.addEventListener('mouseover', (e) => {
+        const card = e.target.closest('.card');
+        if (card) {
+            const url = card.dataset.file;
+            const ext = card.dataset.ext;
+            if (url) showPreview(url, ext);
+        }
+    });
+    // Click outside overlay closes it
+    document.addEventListener('click', (e) => {
+        const overlay = document.getElementById('previewOverlay');
+        if (overlay.classList.contains('show') && !e.target.closest('.card') && !e.target.closest('.preview-overlay')) {
+            hidePreview();
+        }
+    });
+    // Right-click anywhere closes overlay
+    document.addEventListener('contextmenu', (e) => {
+        const overlay = document.getElementById('previewOverlay');
+        if (overlay.classList.contains('show')) {
+            e.preventDefault();
+            hidePreview();
+        }
+    });
+    // Escape key also closes
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') hidePreview();
+    });
 });
 
-// ── Sidebar toggle ──
-function toggleSidebar() {
-    sidebarOpen = !sidebarOpen;
-    document.getElementById('tagSidebar').classList.toggle('collapsed', !sidebarOpen);
-    localStorage.setItem('r34_sidebar', sidebarOpen ? '1' : '0');
-}
-(function() { if (localStorage.getItem('r34_sidebar') === '0') { sidebarOpen = false; } })();
-
-// ── Density modes ──
-const DENSITY_ICONS = ['⊞', '⊟', '≡'];
-const DENSITY_TITLES = ['Large grid', 'Compact grid', 'List'];
-function cycleDensity() {
-    densityMode = (densityMode + 1) % 3;
-    applyDensity();
-}
-function applyDensity() {
-    const g = document.getElementById('gallery');
-    g.classList.remove('compact', 'list');
-    if (densityMode === 1) g.classList.add('compact');
-    if (densityMode === 2) g.classList.add('list');
-    document.getElementById('densityBtn').textContent = DENSITY_ICONS[densityMode];
-    document.getElementById('densityBtn').title = DENSITY_TITLES[densityMode] + ' (Ctrl+D)';
-    localStorage.setItem('r34_density', densityMode);
-    if (searchDone) renderPage();
-}
-function loadDensityPref() {
-    const saved = localStorage.getItem('r34_density');
-    if (saved !== null) densityMode = parseInt(saved);
-    applyDensity();
-}
-
-// ── Status / Settings ──
 function loadStatus() {
-    fetch('/api/status').then(r => r.json()).then(s => {
-        const h1 = document.getElementById('topIcon');
-        if (s.configured) {
-            h1.textContent = '🔞';
-            h1.title = 'Logged in as ...' + s.user_id;
-        } else {
-            h1.textContent = '⚠️';
-            h1.title = 'Not configured — click ⚙';
-            h1.style.cursor = 'pointer';
-            h1.onclick = () => openSettings();
-        }
-    }).catch(() => {});
+    fetch('/api/status')
+        .then(r => r.json())
+        .then(s => {
+            const h1 = document.querySelector('.topbar h1');
+            if (s.configured) {
+                h1.textContent = '🔞';
+                h1.title = `Logged in as ...${s.user_id}`;
+            } else {
+                h1.textContent = '⚠️';
+                h1.title = 'Not configured — click ⚙ to set API credentials';
+                h1.style.cursor = 'pointer';
+                h1.onclick = () => openSettings();
+            }
+        }).catch(() => {});
 }
 
 function loadSettings() {
@@ -995,12 +1045,13 @@ function loadSettings() {
         const credsInput = document.getElementById('cfgCredentials');
         const banner = document.getElementById('apiStatusBanner');
         if (s.configured) {
+            // Show the actual credentials so the user can see/copy them
             credsInput.placeholder = '&api_key=...&user_id=...';
             credsInput.value = s.credentials;
             banner.style.background = '#ecfdf5';
             banner.style.border = '1px solid #16a34a';
             banner.style.color = '#065f46';
-            banner.innerHTML = '✓ API connected as ...' + s.user_id + ' (' + s.download_count + ' files downloaded)';
+            banner.innerHTML = `✓ API connected as ...${s.user_id} (${s.download_count} files downloaded)`;
         } else {
             credsInput.placeholder = '&api_key=...&user_id=...';
             banner.style.background = '#fef3c7';
@@ -1015,15 +1066,19 @@ function loadFiles() {
     fetch('/api/files').then(r => r.json()).then(data => {
         const stats = document.getElementById('downloadsStats');
         const mb = (data.files.reduce((a, f) => a + f.size, 0) / 1024 / 1024).toFixed(1);
-        stats.innerHTML = '<span>' + data.total + ' files</span><span>' + mb + ' MB</span>';
+        stats.innerHTML = `<span>${data.total} files</span><span>${mb} MB</span>`;
         const list = document.getElementById('fileList');
-        if (!data.files.length) { list.innerHTML = '<div class="empty"><p>No downloaded files yet.</p></div>'; return; }
-        list.innerHTML = data.files.map(f =>
-            '<div class="file-item" data-name="' + esc(f.name) + '">' +
-            '<input type="checkbox" onchange="toggleFile(\'' + esc(f.name) + '\', this.checked)" />' +
-            '<span class="fname" title="' + esc(f.name) + '">' + esc(f.name) + '</span>' +
-            '<span class="fsize">' + formatSize(f.size) + '</span>' +
-            '<span class="fdel" onclick="deleteFile(\'' + esc(f.name) + '\')">✕</span></div>').join('');
+        if (!data.files.length) {
+            list.innerHTML = '<div class="empty"><p>No downloaded files yet.</p></div>';
+            return;
+        }
+        list.innerHTML = data.files.map(f => `
+            <div class="file-item" data-name="${esc(f.name)}">
+                <input type="checkbox" onchange="toggleFile('${esc(f.name)}', this.checked)" />
+                <span class="fname" title="${esc(f.name)}">${esc(f.name)}</span>
+                <span class="fsize">${formatSize(f.size)}</span>
+                <span class="fdel" onclick="deleteFile('${esc(f.name)}')">✕</span>
+            </div>`).join('');
     });
 }
 
@@ -1036,6 +1091,7 @@ function formatSize(b) {
 
 // ── Tag Input System ──
 let _tagInputSetup = false;
+
 function setupTagInput() {
     if (_tagInputSetup) return;
     _tagInputSetup = true;
@@ -1044,22 +1100,42 @@ function setupTagInput() {
 
     input.addEventListener('input', (e) => {
         const val = input.value.trim();
-        if (val.length >= 2) fetchSuggestions(val);
-        else closeSuggestions();
+        // input handler ONLY handles autocomplete for the current word.
+        // currentTags is managed by keydown handlers (Space/Enter/Backspace) — never touch it here.
+        console.log('[input] val:', JSON.stringify(val));
+        if (val.length >= 2) {
+            fetchSuggestions(val);
+        } else {
+            closeSuggestions();
+        }
     });
 
     input.addEventListener('keydown', (e) => {
         const val = input.value.trim();
+        console.log('[keydown] key:', e.key, 'val:', JSON.stringify(val), 'currentTags:', JSON.stringify(currentTags));
+
         if (e.key === ' ') {
+            // Space commits the current word as a tag
             e.preventDefault();
             const word = val.replace(/\\s+/g, '_');
-            if (word) { addTag(word); input.value = ''; renderChipsOnly(); updateSelCount(); }
+            if (word) {
+                console.log('[keydown] SPACE: adding tag', word);
+                addTag(word);
+                input.value = '';
+                renderChipsOnly();
+                updateSelCount();
+            }
             closeSuggestions();
         } else if (e.key === 'Enter') {
             e.preventDefault();
-            if (val) { addTag(val); input.value = ''; }
+            console.log('[keydown] ENTER');
+            if (val) {
+                addTag(val);
+                input.value = '';
+            }
             renderChipsOnly();
             closeSuggestions();
+            console.log('[keydown] ENTER: currentTags=', JSON.stringify(currentTags));
             doSearch();
         } else if (e.key === 'Backspace' && val === '' && currentTags.length > 0) {
             currentTags.pop();
@@ -1082,30 +1158,34 @@ function setupTagInput() {
         }
     });
 
+    // Click on tag area focuses the input
     document.getElementById('tagArea').addEventListener('click', () => {
         document.getElementById('tagInput').focus();
     });
 }
 
+// Render only the chip elements BEFORE the input (don't touch the input)
 function renderChipsOnly() {
     const area = document.getElementById('tagArea');
     const input = document.getElementById('tagInput');
+    // Remove existing chips (any .tag-chip elements)
     area.querySelectorAll('.tag-chip').forEach(el => el.remove());
+    // Insert fresh chips before the input
     currentTags.forEach(t => {
         const chip = document.createElement('div');
         chip.className = 'tag-chip';
-        chip.innerHTML = '<span>' + esc(t) + '</span><span class="remove-tag">X</span>';
+        chip.innerHTML = `<span>${esc(t)}</span><span class="remove-tag">X</span>`;
         chip.querySelector('.remove-tag').addEventListener('click', (ev) => {
             ev.stopPropagation();
             currentTags = currentTags.filter(x => x !== t);
             renderChipsOnly();
             updateSelCount();
         });
-        chip.addEventListener('contextmenu', (ev) => tagContextMenu(ev, t));
         area.insertBefore(chip, input);
     });
 }
 
+// Called by doSearch / other places that need full chip+input reset
 function renderChips() {
     const input = document.getElementById('tagInput');
     if (input) input.value = '';
@@ -1114,44 +1194,70 @@ function renderChips() {
 
 function addTag(tag) {
     tag = tag.trim().replace(/\\s+/g, '_');
-    if (tag && !currentTags.includes(tag)) currentTags.push(tag);
+    console.log('[addTag] input:', JSON.stringify(tag), 'currentTags:', JSON.stringify(currentTags));
+    if (tag && !currentTags.includes(tag)) {
+        currentTags.push(tag);
+        console.log('[addTag] ADDED. currentTags now:', JSON.stringify(currentTags));
+    } else {
+        console.log('[addTag] SKIPPED (empty or duplicate)');
+    }
 }
 
 function fetchSuggestions(prefix) {
+    console.log('[fetchSuggestions] prefix:', prefix);
     clearTimeout(window._suggestDebounce);
     window._suggestDebounce = setTimeout(() => {
-        fetch('/api/tags?q=' + encodeURIComponent(prefix))
+        const url = '/api/tags?q=' + encodeURIComponent(prefix);
+        console.log('[fetchSuggestions] calling:', url);
+        fetch(url)
             .then(r => r.json())
             .then(tags => {
+                console.log('[fetchSuggestions] got tags:', JSON.stringify(tags));
                 tagSuggestions = tags.filter(t => !currentTags.includes(t));
                 highlightedSuggestion = -1;
                 renderSuggestions();
-            }).catch(e => { tagSuggestions = []; });
+            }).catch(e => { 
+                console.error('[fetchSuggestions] error:', e);
+                tagSuggestions = []; 
+            });
     }, 200);
 }
 
 function renderSuggestions() {
     const el = document.getElementById('tagSuggestions');
+    console.log('[renderSuggestions] count:', tagSuggestions.length, 'el exists:', !!el);
     if (!tagSuggestions.length) { el.classList.remove('open'); return; }
     el.classList.add('open');
     el.innerHTML = tagSuggestions.map((t, i) =>
-        '<div class="tag-suggestion' + (i === highlightedSuggestion ? ' highlighted' : '') + '" onclick="pickSuggestion(' + i + ')">' +
-        '<span>' + esc(t) + '</span>' +
-        '<span class="sug-type">' + (tagTypesCache[t] || '') + '</span></div>'
+        `<div class="tag-suggestion${i === highlightedSuggestion ? ' highlighted' : ''}" onclick="pickSuggestion(${i})">${esc(t)}</div>`
     ).join('');
+    console.log('[renderSuggestions] opened, innerHTML length:', el.innerHTML.length);
 }
 
 function pickSuggestion(i) {
     const tag = tagSuggestions[i];
-    if (tag) { addTag(tag); renderChips(); closeSuggestions(); setTimeout(() => { const inp = document.getElementById('tagInput'); if (inp) inp.focus(); }, 10); }
+    if (tag) {
+        addTag(tag);
+        renderChips();
+        closeSuggestions();
+        // Focus back on input
+        setTimeout(() => {
+            const input = document.getElementById('tagInput');
+            if (input) { input.focus(); }
+        }, 10);
+    }
 }
 
 function closeSuggestions() {
     document.getElementById('tagSuggestions').classList.remove('open');
-    tagSuggestions = []; highlightedSuggestion = -1;
+    tagSuggestions = [];
+    highlightedSuggestion = -1;
 }
 
-function focusTagInput() { const inp = document.getElementById('tagInput'); if (inp) inp.focus(); }
+function focusTagInput() {
+    const input = document.getElementById('tagInput');
+    if (input) input.focus();
+}
 
 // ── Tabs ──
 function switchTab(tab) {
@@ -1164,18 +1270,29 @@ function switchTab(tab) {
 }
 
 // ── Search ──
+let allPosts = [];       // ALL fetched posts (unlimited)
+let currentPage = 0;
+const PAGE_SIZE = 50;
+
 function doSearch() {
+    // Grab any pending text from the input field and add it as a tag
     const input = document.getElementById('tagInput');
-    if (input && input.value.trim()) { addTag(input.value.trim()); renderChips(); }
+    if (input && input.value.trim()) {
+        const word = input.value.trim().replace(/\s+/g, '_');
+        if (word && !currentTags.includes(word)) currentTags.push(word);
+        renderChips();
+    }
     if (!currentTags.length) {
         document.getElementById('statusBar').textContent = 'No tags entered. Type a tag and press Enter or click Search.';
         return;
     }
+
     document.getElementById('statusBar').textContent = 'Searching (fetching all results)...';
     document.getElementById('gallery').innerHTML = '<div class="loading">Searching...</div>';
     clearSidebar();
 
     const url = '/api/search_all?tags=' + encodeURIComponent(currentTags.join(' ')) + '&max=5000';
+
     fetch(url)
         .then(r => r.json())
         .then(posts => {
@@ -1196,9 +1313,302 @@ function doSearch() {
             document.getElementById('gallery').innerHTML = '<div class="empty"><p>Error: ' + e.message + '</p></div>';
             document.getElementById('statusBar').textContent = 'Search failed.';
         });
+}function renderPage() {
+    const start = currentPage * PAGE_SIZE;
+    const page = allPosts.slice(start, start + PAGE_SIZE);
+    const gallery = document.getElementById('gallery');
+    const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
+    const isList = densityMode === 2;
+
+    if (!page.length) {
+        gallery.innerHTML = '<div class="empty"><p>No results on this page</p></div>';
+        return;
+    }
+
+    let html = '';
+    if (totalPages > 1) {
+        html += '<div style="grid-column:1/-1;display:flex;gap:8px;align-items:center;padding:4px 0;font-size:0.82rem;color:#8a7050">' +
+            '<button onclick="currentPage=Math.max(0,currentPage-1);renderPage();window.scrollTo(0,0);" ' + (currentPage===0?'disabled':'') + ' style="font-size:0.8rem">◀ Prev</button>' +
+            '<span>Page ' + (currentPage+1) + ' of ' + totalPages + '</span>' +
+            '<button onclick="currentPage=Math.min(' + (totalPages-1) + ',currentPage+1);renderPage();window.scrollTo(0,0);" ' + (currentPage>=totalPages-1?'disabled':'') + ' style="font-size:0.8rem">Next ▶</button>' +
+            '<span style="margin-left:auto">' + allPosts.length + ' total</span></div>';
+    }
+
+    html += page.map(p => {
+        const allTagsStr = (p.tags || []).join(' ');
+        const selClass = selectedIds.has(p.id) ? ' selected' : '';
+        const checked = selectedIds.has(p.id) ? 'checked' : '';
+        if (isList) {
+            return '<div class="card' + selClass + '" data-id="' + p.id + '" data-alltags="' + esc(allTagsStr) + '" data-file="' + esc(p.file_url) + '" data-ext="' + esc(p.ext) + '" onclick="toggleCard(' + p.id + ', event)">' +
+                '<input type="checkbox" class="sel" ' + checked + ' onclick="event.stopPropagation(); toggleCard(' + p.id + ', event)" />' +
+                '<img class="thumb" src="' + p.preview_url + '" alt="Post ' + p.id + '" loading="lazy" onerror="this.style.display=\'none\'" />' +
+                '<span class="list-id">#' + p.id + '</span>' +
+                '<div class="meta"><span class="dims">' + p.width + '×' + p.height + '</span></div>' +
+                '<span class="list-rating"><span class="rating ' + p.rating + '">' + (p.rating || '?') + '</span></span>' +
+                '<div class="tags">' + (p.tags || []).slice(0, 10).join(' ') + '</div></div>';
+        }
+        return '<div class="card' + selClass + '" data-id="' + p.id + '" data-alltags="' + esc(allTagsStr) + '" data-file="' + esc(p.file_url) + '" data-ext="' + esc(p.ext) + '" onclick="toggleCard(' + p.id + ', event)">' +
+            '<input type="checkbox" class="sel" ' + checked + ' onclick="event.stopPropagation(); toggleCard(' + p.id + ', event)" />' +
+            '<img class="thumb" src="' + p.preview_url + '" alt="Post ' + p.id + '" loading="lazy" onerror="this.style.display=\'none\'" />' +
+            '<div class="meta"><span class="dims">' + p.width + '×' + p.height + '</span><span class="rating ' + p.rating + '">' + (p.rating || '?') + '</span></div>' +
+            '<div class="tags">' + (p.tags || []).slice(0, 5).join(' ') + '</div></div>';
+    }).join('');
+
+    gallery.innerHTML = html;
+    updateSelCount();
+}function updateSelCount() {
+    if (!searchDone) return;
+    const selPageNum = document.getElementById('selPageNum');
+    const dlCount = document.getElementById('dlCount');
+    const dlBtn = document.getElementById('dlBtn');
+    const dlBar = document.getElementById('downloadBar');
+    const dlCountNum = document.getElementById('dlCountNum');
+    if (selPageNum) selPageNum.textContent = selectedIds.size;
+    if (dlCount) dlCount.textContent = selectedIds.size;
+    if (dlBtn) dlBtn.disabled = selectedIds.size === 0;
+    if (dlBar) dlBar.classList.toggle('hidden', selectedIds.size === 0);
+    if (dlCountNum) dlCountNum.textContent = selectedIds.size;
 }
 
-// ── Tag Sidebar ──
+function toggleCard(id, event) {
+    if (selectedIds.has(id)) selectedIds.delete(id);
+    else selectedIds.add(id);
+    const card = document.querySelector(`.card[data-id="${id}"]`);
+    if (card) card.classList.toggle('selected', selectedIds.has(id));
+    const cb = card?.querySelector('.sel');
+    if (cb) cb.checked = selectedIds.has(id);
+    updateSelCount();
+    const dlBar = document.getElementById('downloadBar');
+    const dlCountNum = document.getElementById('dlCountNum');
+    if (dlBar) dlBar.classList.toggle('hidden', selectedIds.size === 0);
+    if (dlCountNum) dlCountNum.textContent = selectedIds.size;
+}
+
+function selectAllPage() {
+    // Select all posts across ALL pages
+    allPosts.forEach(p => selectedIds.add(p.id));
+    renderPage();
+    updateSelCount();
+}
+
+function deselectAll() {
+    selectedIds.clear();
+    renderPage();
+    updateSelCount();
+}
+
+// ── Download ──
+function downloadSelected() {
+    if (selectedIds.size === 0) { alert('Select at least one image first.'); return; }
+
+    const fill = document.getElementById('dlProgressFill');
+    const text = document.getElementById('dlProgressText');
+    if (fill) { fill.style.width = '0%'; }
+    if (text) { text.textContent = '0%'; }
+
+    fetch('/api/download', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ids: Array.from(selectedIds)})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) throw new Error(data.error);
+        pollProgress(data.download_id);
+    })
+    .catch(e => {
+        if (text) text.textContent = 'Error: ' + e.message;
+    });
+}
+
+function pollProgress(dlId) {
+    activeDlId = dlId;
+    const fill = document.getElementById('dlProgressFill');
+    const text = document.getElementById('dlProgressText');
+
+    const interval = setInterval(() => {
+        fetch('/api/download/' + dlId)
+            .then(r => r.json())
+            .then(prog => {
+                const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
+                if (fill) fill.style.width = pct + '%';
+                if (text) text.textContent = `${prog.done}/${prog.total}`;
+                if (prog.status === 'complete') {
+                    clearInterval(interval);
+                    const failInfo = prog.failed > 0 ? `, ${prog.failed} fail` : '';
+                    if (text) {
+                        text.textContent = `✓ Done (${prog.skipped} skip${failInfo})`;
+                        text.style.color = prog.failed > 0 ? '#c88a1a' : '#3a7840';
+                    }
+                    setTimeout(() => {
+                        if (fill) { fill.style.width = '0%'; }
+                        if (text) { text.textContent = '0%'; text.style.color = ''; }
+                        selectedIds.clear();
+                        renderGallery();
+                    }, 3500);
+                }
+            });
+    }, 800);
+}
+
+// ── Files ──
+function toggleFile(name, checked) {
+    if (checked) selectedFileNames.add(name);
+    else selectedFileNames.delete(name);
+}
+
+function selectAllFiles() {
+    document.querySelectorAll('#fileList input[type="checkbox"]').forEach(cb => {
+        cb.checked = true;
+        const n = cb.closest('.file-item')?.dataset.name;
+        if (n) selectedFileNames.add(n);
+    });
+}
+
+function deselectAllFiles() {
+    document.querySelectorAll('#fileList input[type="checkbox"]').forEach(cb => cb.checked = false);
+    selectedFileNames.clear();
+}
+
+function deleteFile(name) {
+    if (!confirm('Delete ' + name + '?')) return;
+    fetch('/api/files/' + encodeURIComponent(name), {method: 'DELETE'})
+        .then(r => r.json())
+        .then(() => loadFiles())
+        .catch(e => alert('Delete failed: ' + e.message));
+}
+
+function deleteSelectedFiles() {
+    if (!selectedFileNames.size) { alert('Select files first.'); return; }
+    if (!confirm('Delete ' + selectedFileNames.size + ' files?')) return;
+    fetch('/api/files/delete_batch', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({names: Array.from(selectedFileNames)})
+    })
+    .then(r => r.json())
+    .then(() => { selectedFileNames.clear(); loadFiles(); })
+    .catch(e => alert('Delete failed: ' + e.message));
+}
+
+// ── Settings ──
+function openSettings() {
+    document.getElementById('settingsOverlay').classList.add('open');
+    loadSettings();
+}
+
+function closeSettings() {
+    document.getElementById('settingsOverlay').classList.remove('open');
+    document.getElementById('cfgStatus').textContent = '';
+    document.getElementById('cfgStatus').className = 'status-msg';
+}
+
+function saveConfig() {
+    const credentials = document.getElementById('cfgCredentials').value.trim();
+    const delay = parseFloat(document.getElementById('cfgDelay').value);
+    const timeout = parseInt(document.getElementById('cfgTimeout').value);
+    const download_dir = document.getElementById('cfgDownloadDir').value.trim();
+    const statusEl = document.getElementById('cfgStatus');
+
+    const body = {};
+    if (credentials) body.credentials = credentials;
+    if (!isNaN(delay)) body.delay = delay;
+    if (!isNaN(timeout)) body.timeout = timeout;
+    if (download_dir) body.download_dir = download_dir;
+
+    fetch('/api/config', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.configured) {
+            statusEl.textContent = '✓ Settings saved. API connected.';
+            statusEl.className = 'status-msg ok';
+            loadSettings();
+            loadStatus();
+        } else {
+            statusEl.textContent = '⚠ Saved but API not configured — check credentials.';
+            statusEl.className = 'status-msg err';
+        }
+    })
+    .catch(e => {
+        statusEl.textContent = 'Error: ' + e.message;
+        statusEl.className = 'status-msg err';
+    });
+}
+
+function testConnection() {
+    const credentials = document.getElementById('cfgCredentials').value.trim();
+    const statusEl = document.getElementById('cfgStatus');
+    const btn = document.querySelector('.test-btn');
+
+    if (!credentials) {
+        statusEl.textContent = '⚠ Enter API credentials first.';
+        statusEl.className = 'status-msg err';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Testing...';
+    statusEl.textContent = 'Testing connection...';
+    statusEl.className = 'status-msg';
+
+    fetch('/api/test-connection', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({credentials})
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.textContent = 'Test Connection';
+        if (data.ok) {
+            statusEl.textContent = '✓ ' + data.message;
+            statusEl.className = 'status-msg ok';
+            loadSettings();
+        } else {
+            statusEl.textContent = '✗ ' + (data.error || 'Connection failed');
+            statusEl.className = 'status-msg err';
+        }
+    })
+    .catch(e => {
+        btn.disabled = false;
+        btn.textContent = 'Test Connection';
+        statusEl.textContent = '✗ Error: ' + e.message;
+        statusEl.className = 'status-msg err';
+    });
+}
+
+
+// ── Sidebar Toggle ──
+function toggleSidebar() {
+    sidebarOpen = !sidebarOpen;
+    document.getElementById('tagSidebar').classList.toggle('collapsed', !sidebarOpen);
+    localStorage.setItem('r34_sidebar', sidebarOpen ? '1' : '0');
+}
+
+// ── Density Modes ──
+const DENSITY_ICONS = ['⊞', '⊟', '≡'];
+function cycleDensity() {
+    densityMode = (densityMode + 1) % 3;
+    applyDensity();
+}
+function applyDensity() {
+    const g = document.getElementById('gallery');
+    g.classList.remove('compact', 'list');
+    if (densityMode === 1) g.classList.add('compact');
+    if (densityMode === 2) g.classList.add('list');
+    document.getElementById('densityBtn').textContent = DENSITY_ICONS[densityMode];
+    document.getElementById('densityBtn').title = ['Large grid', 'Compact grid', 'List'][densityMode] + ' (Ctrl+D)';
+    localStorage.setItem('r34_density', densityMode);
+    if (searchDone) renderPage();
+}
+function loadDensityPref() {
+    const saved = localStorage.getItem('r34_density');
+    if (saved !== null) densityMode = parseInt(saved);
+    applyDensity();
+}
+
+// ── Tag Sidebar Building ──
 function clearSidebar() {
     document.getElementById('pairedSection').style.display = 'none';
     document.getElementById('freqSection').style.display = 'none';
@@ -1213,80 +1623,65 @@ function clearSidebar() {
 
 function buildTagSidebar(posts) {
     document.getElementById('sidebarEmpty').style.display = 'none';
-
-    // Count all tags across results
     const tagCounts = {};
-    const tagPostMap = {}; // tag -> set of post ids
     posts.forEach(p => {
         (p.tags || []).forEach(t => {
             t = t.toLowerCase();
             tagCounts[t] = (tagCounts[t] || 0) + 1;
-            if (!tagPostMap[t]) tagPostMap[t] = new Set();
-            tagPostMap[t].add(p.id);
         });
     });
-
     const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
     const maxCount = sortedTags.length > 0 ? sortedTags[0][1] : 1;
     const activeTags = new Set(currentTags.map(t => t.toLowerCase()));
 
-    // Fetch tag types
-    const allTagNames = sortedTags.map(e => e[0]);
+    // Fetch types
+    const allNames = sortedTags.map(e => e[0]);
     fetch('/api/tag_types', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({tags: allTagNames})
+        body: JSON.stringify({tags: allNames})
     }).then(r => r.json()).then(types => {
-        tagTypesCache = {...tagTypesCache};
         Object.entries(types).forEach(([t, info]) => { tagTypesCache[t] = info.type; });
-        renderAllTags(sortedTags, maxCount, activeTags, tagPostMap);
-    }).catch(() => {
-        // Fallback: render without types
-        renderAllTags(sortedTags, maxCount, activeTags, tagPostMap);
-    });
+        renderAllTags(sortedTags, maxCount, activeTags);
+    }).catch(() => { renderAllTags(sortedTags, maxCount, activeTags); });
 
-    // Commonly paired: tags that often co-occur with active tags, excluding already active
     buildPairedTags(sortedTags, activeTags);
-
-    // Frequency visualization
     buildFreqTags(sortedTags.slice(0, 15), maxCount, activeTags);
 }
 
-function renderAllTags(sortedTags, maxCount, activeTags, tagPostMap) {
+function renderAllTags(sortedTags, maxCount, activeTags) {
     document.getElementById('allTagsSection').style.display = 'block';
     document.getElementById('tagCount').textContent = sortedTags.length;
-
-    const html = sortedTags.map(([tag, count]) => {
+    document.getElementById('allTagsList').innerHTML = sortedTags.map(([tag, count]) => {
         const ttype = tagTypesCache[tag] || 'general';
         const pct = Math.round((count / maxCount) * 100);
         const isActive = activeTags.has(tag);
-        return '<div class="sidebar-tag' + (isActive ? ' highlighted' : '') + '" data-tag="' + esc(tag) + '" ' +
-            'onclick="sidebarTagClick(\'' + esc(tag) + '\', event)" ' +
-            'oncontextmenu="tagContextMenu(event, \'' + esc(tag) + '\')" ' +
-            'onmouseenter="highlightTagCards(\'' + esc(tag) + '\')" ' +
+        const et = esc(tag);
+        return '<div class="sidebar-tag' + (isActive ? ' highlighted' : '') + '" data-tag="' + et + '" ' +
+            'onclick="sidebarTagClick(\'' + et + '\', event)" ' +
+            'oncontextmenu="tagContextMenu(event, \'' + et + '\')" ' +
+            'onmouseenter="highlightTagCards(\'' + et + '\')" ' +
             'onmouseleave="unhighlightTagCards()">' +
             '<span class="tag-color type-' + ttype + '"></span>' +
-            '<span class="tag-name">' + esc(tag) + '</span>' +
+            '<span class="tag-name">' + et + '</span>' +
             '<span class="tag-freq-bar"><span class="tag-freq-fill" style="width:' + pct + '%"></span></span>' +
             '<span class="tag-count">' + count + '</span>' +
             '<span class="tag-actions">' +
-            '<button class="tag-act tag-plus" onclick="event.stopPropagation();sidebarAddTag(\'' + esc(tag) + '\')" title="Add to search">+</button>' +
-            '<button class="tag-act tag-minus" onclick="event.stopPropagation();sidebarExcludeTag(\'' + esc(tag) + '\')" title="Exclude from search">-</button>' +
-            '<button class="tag-act tag-wiki" onclick="event.stopPropagation();openTagWiki(\'' + esc(tag) + '\')" title="Open wiki">?</button>' +
+            '<button class="tag-act tag-plus" onclick="event.stopPropagation();sidebarAddTag(\'' + et + '\')" title="Add to search">+</button>' +
+            '<button class="tag-act tag-minus" onclick="event.stopPropagation();sidebarExcludeTag(\'' + et + '\')" title="Exclude from search">-</button>' +
+            '<button class="tag-act tag-wiki" onclick="event.stopPropagation();openTagWiki(\'' + et + '\')" title="Open wiki">?</button>' +
             '</span></div>';
     }).join('');
-
-    document.getElementById('allTagsList').innerHTML = html;
 }
 
 function buildPairedTags(sortedTags, activeTags) {
-    // Show top tags that aren't already active
     const paired = sortedTags.filter(([tag]) => !activeTags.has(tag)).slice(0, 20);
     if (!paired.length) { document.getElementById('pairedSection').style.display = 'none'; return; }
     document.getElementById('pairedSection').style.display = 'block';
-    document.getElementById('pairedTags').innerHTML = paired.map(([tag]) =>
-        '<span class="paired-chip" onclick="sidebarAddTag(\'' + esc(tag) + '\')">' + esc(tag) + '</span>'
-    ).join('');
+    document.getElementById('pairedTags').innerHTML = paired.map(([tag]) => {
+        const et = esc(tag);
+        return '<span class="paired-chip" onclick="sidebarAddTag(\'' + et + '\')">' + et + '</span>';
+    }).join('');
 }
 
 function buildFreqTags(topTags, maxCount, activeTags) {
@@ -1295,18 +1690,18 @@ function buildFreqTags(topTags, maxCount, activeTags) {
     document.getElementById('freqTags').innerHTML = topTags.map(([tag, count]) => {
         const pct = Math.round((count / maxCount) * 100);
         const ttype = tagTypesCache[tag] || 'general';
-        return '<div class="sidebar-tag" onclick="sidebarAddTag(\'' + esc(tag) + '\')">' +
+        const et = esc(tag);
+        return '<div class="sidebar-tag" onclick="sidebarAddTag(\'' + et + '\')">' +
             '<span class="tag-color type-' + ttype + '"></span>' +
-            '<span class="tag-name">' + esc(tag) + '</span>' +
+            '<span class="tag-name">' + et + '</span>' +
             '<span class="tag-freq-bar"><span class="tag-freq-fill" style="width:' + pct + '%"></span></span>' +
             '<span class="tag-count">' + count + '</span></div>';
     }).join('');
 }
 
+// ── Sidebar Tag Actions ──
 function sidebarTagClick(tag, event) {
-    // Click = search ONLY this tag (replaces current)
     if (event.ctrlKey || event.metaKey) {
-        // Ctrl+click = add to search
         sidebarAddTag(tag);
     } else {
         currentTags = [tag];
@@ -1314,7 +1709,6 @@ function sidebarTagClick(tag, event) {
         doSearch();
     }
 }
-
 function sidebarAddTag(tag) {
     if (!currentTags.includes(tag)) {
         currentTags.push(tag);
@@ -1322,7 +1716,6 @@ function sidebarAddTag(tag) {
         doSearch();
     }
 }
-
 function sidebarExcludeTag(tag) {
     const negTag = '-' + tag;
     if (!currentTags.includes(negTag)) {
@@ -1331,75 +1724,48 @@ function sidebarExcludeTag(tag) {
         doSearch();
     }
 }
-
 function openTagWiki(tag) {
     window.open('https://rule34.xxx/index.php?page=wiki&s=list&search=' + encodeURIComponent(tag), '_blank');
 }
 
-// ── Gallery event delegation (hover preview + hover tags, set up once) ──
+// ── Hover Reveal ──
 function setupGalleryDelegation() {
     const gallery = document.getElementById('gallery');
-    // Single mouseover handler for both preview and hover-tags
     gallery.addEventListener('mouseover', (e) => {
         const card = e.target.closest('.card');
         if (!card) return;
-        // Hover-to-reveal tags in sidebar
         const tags = card.dataset.alltags;
         if (tags) { hoveredCardTags = tags.split(' '); showHoverTags(hoveredCardTags); }
-        // Preview (large image)
-        const url = card.dataset.file;
-        const ext = card.dataset.ext;
-        if (url) showPreview(url, ext);
     });
     gallery.addEventListener('mouseout', (e) => {
         const card = e.target.closest('.card');
-        if (card && !e.relatedTarget?.closest('.card')) {
+        if (card && !e.relatedTarget || !e.relatedTarget.closest('.card')) {
             hoveredCardTags = null;
             hideHoverTags();
             unhighlightTagCards();
         }
     });
-    // Click outside overlay closes it
-    document.addEventListener('click', (e) => {
-        const overlay = document.getElementById('previewOverlay');
-        if (overlay.classList.contains('show') && !e.target.closest('.card') && !e.target.closest('.preview-overlay')) {
-            hidePreview();
-        }
-    });
-    // Right-click anywhere closes overlay
-    document.addEventListener('contextmenu', (e) => {
-        const overlay = document.getElementById('previewOverlay');
-        if (overlay.classList.contains('show')) { e.preventDefault(); hidePreview(); }
-    });
-    // Escape key closes overlay
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') hidePreview();
-    });
 }
 
 function showHoverTags(tagList) {
     document.getElementById('hoverTagsSection').style.display = 'block';
-    const html = tagList.map(tag => {
+    document.getElementById('hoverTagsList').innerHTML = tagList.map(tag => {
         const ttype = tagTypesCache[tag.toLowerCase()] || 'general';
-        const isActive = currentTags.map(t => t.toLowerCase()).includes(tag.toLowerCase());
-        return '<div class="sidebar-tag' + (isActive ? ' highlighted' : '') + '" ' +
-            'onclick="sidebarAddTag(\'' + esc(tag) + '\')" ' +
-            'oncontextmenu="tagContextMenu(event, \'' + esc(tag) + '\')">' +
+        const et = esc(tag);
+        return '<div class="sidebar-tag" onclick="sidebarAddTag(\'' + et + '\')" oncontextmenu="tagContextMenu(event, \'' + et + '\')">' +
             '<span class="tag-color type-' + ttype + '"></span>' +
-            '<span class="tag-name">' + esc(tag) + '</span>' +
+            '<span class="tag-name">' + et + '</span>' +
             '<span class="tag-actions">' +
-            '<button class="tag-act tag-plus" onclick="event.stopPropagation();sidebarAddTag(\'' + esc(tag) + '\')">+</button>' +
-            '<button class="tag-act tag-minus" onclick="event.stopPropagation();sidebarExcludeTag(\'' + esc(tag) + '\')">-</button>' +
+            '<button class="tag-act tag-plus" onclick="event.stopPropagation();sidebarAddTag(\'' + et + '\')">+</button>' +
+            '<button class="tag-act tag-minus" onclick="event.stopPropagation();sidebarExcludeTag(\'' + et + '\')">-</button>' +
             '</span></div>';
     }).join('');
-    document.getElementById('hoverTagsList').innerHTML = html;
 }
 
 function hideHoverTags() {
     document.getElementById('hoverTagsSection').style.display = 'none';
 }
 
-// ── Highlight matching cards ──
 function highlightTagCards(tag) {
     document.querySelectorAll('.card').forEach(card => {
         const ct = card.dataset.alltags || '';
@@ -1410,17 +1776,10 @@ function unhighlightTagCards() {
     document.querySelectorAll('.card').forEach(c => c.classList.remove('sidebar-highlight'));
 }
 
-// ── Right-click context menu ──
-let _ctxTargetTag = null;
+// ── Right-click Context Menu ──
 function setupContextMenu() {
     document.addEventListener('click', () => {
         document.getElementById('contextMenu').classList.remove('open');
-    });
-    document.addEventListener('contextmenu', (e) => {
-        // Only close if clicking outside a tag element
-        if (!e.target.closest('.sidebar-tag') && !e.target.closest('.tag-chip')) {
-            // Let default context menu work for non-tag elements
-        }
     });
 }
 
@@ -1448,25 +1807,21 @@ function tagContextMenu(event, tag) {
     menu.classList.add('open');
     menu.style.left = Math.min(event.clientX, window.innerWidth - 180) + 'px';
     menu.style.top = Math.min(event.clientY, window.innerHeight - 200) + 'px';
-
-    window._ctxCleanTag = cleanTag;
 }
 
 function ctxSearchOnly() { currentTags = [_ctxTargetTag]; renderChips(); doSearch(); document.getElementById('contextMenu').classList.remove('open'); }
 function ctxAdd() { sidebarAddTag(_ctxTargetTag); document.getElementById('contextMenu').classList.remove('open'); }
 function ctxRemove() { currentTags = currentTags.filter(t => t !== _ctxTargetTag); renderChips(); doSearch(); document.getElementById('contextMenu').classList.remove('open'); }
 function ctxExclude() { sidebarExcludeTag(_ctxTargetTag); document.getElementById('contextMenu').classList.remove('open'); }
-function ctxCopy() { const ct = window._ctxCleanTag || _ctxTargetTag; navigator.clipboard.writeText(ct).catch(() => {}); document.getElementById('contextMenu').classList.remove('open'); }
-function ctxWiki() { const ct = window._ctxCleanTag || _ctxTargetTag; openTagWiki(ct); document.getElementById('contextMenu').classList.remove('open'); }
+function ctxCopy() { navigator.clipboard.writeText(_ctxTargetTag).catch(() => {}); document.getElementById('contextMenu').classList.remove('open'); }
+function ctxWiki() { openTagWiki(_ctxTargetTag); document.getElementById('contextMenu').classList.remove('open'); }
 
 // ── Saved Searches ──
 function getSavedSearches() {
     try { return JSON.parse(localStorage.getItem('r34_saved_searches') || '[]'); }
     catch(e) { return []; }
 }
-function saveSavedSearches(searches) {
-    localStorage.setItem('r34_saved_searches', JSON.stringify(searches));
-}
+function saveSavedSearches(s) { localStorage.setItem('r34_saved_searches', JSON.stringify(s)); }
 function toggleSavedSearches() {
     const dd = document.getElementById('savedDropdown');
     if (dd.classList.contains('open')) { dd.classList.remove('open'); return; }
@@ -1475,18 +1830,13 @@ function toggleSavedSearches() {
         dd.innerHTML = '<div style="padding:10px 14px;font-size:0.78rem;color:#a89060;">No saved searches. Click 💟 after searching to save.</div>';
     } else {
         dd.innerHTML = searches.map((s, i) =>
-            '<div class="saved-item" onclick="loadSavedSearch(' + i + ')">' +
-            '<span>' + esc(s) + '</span>' +
-            '<span class="saved-del" onclick="event.stopPropagation();deleteSavedSearch(' + i + ')">✕</span></div>'
+            '<div class="saved-item" onclick="loadSavedSearch(' + i + ')"><span>' + esc(s) + '</span><span class="saved-del" onclick="event.stopPropagation();deleteSavedSearch(' + i + ')">✕</span></div>'
         ).join('');
     }
     dd.classList.add('open');
     setTimeout(() => {
         document.addEventListener('click', function closeDD(e) {
-            if (!e.target.closest('.saved-searches')) {
-                dd.classList.remove('open');
-                document.removeEventListener('click', closeDD);
-            }
+            if (!e.target.closest('.saved-searches')) { dd.classList.remove('open'); document.removeEventListener('click', closeDD); }
         });
     }, 10);
 }
@@ -1494,19 +1844,11 @@ function saveCurrentSearch() {
     const q = currentTags.join(' ');
     if (!q) return;
     const searches = getSavedSearches();
-    if (!searches.includes(q)) {
-        searches.push(q);
-        saveSavedSearches(searches);
-    }
+    if (!searches.includes(q)) { searches.push(q); saveSavedSearches(searches); }
 }
 function loadSavedSearch(i) {
     const searches = getSavedSearches();
-    if (searches[i]) {
-        currentTags = searches[i].split(' ');
-        renderChips();
-        document.getElementById('savedDropdown').classList.remove('open');
-        doSearch();
-    }
+    if (searches[i]) { currentTags = searches[i].split(' '); renderChips(); document.getElementById('savedDropdown').classList.remove('open'); doSearch(); }
 }
 function deleteSavedSearch(i) {
     const searches = getSavedSearches();
@@ -1518,43 +1860,25 @@ function deleteSavedSearch(i) {
 // ── Keyboard Shortcuts ──
 function setupKeyboardShortcuts() {
     document.addEventListener('keydown', (e) => {
-        // Don't fire when typing in input fields (except specific ones)
         const tag = e.target.tagName;
         const isInput = tag === 'INPUT' || tag === 'TEXTAREA';
-        const tagInput = document.getElementById('tagInput');
-
-        // Ctrl+B: toggle sidebar
         if (e.ctrlKey && e.key === 'b') { e.preventDefault(); toggleSidebar(); return; }
-        // Ctrl+D: cycle density
         if (e.ctrlKey && e.key === 'd') { e.preventDefault(); cycleDensity(); return; }
-        // Ctrl+S: save search
         if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveCurrentSearch(); return; }
-
-        // s: focus search (only when not in input)
-        if (!isInput && e.key === 's') { e.preventDefault(); focusTagInput(); return; }
-        // a: select all on page (only when not in input)
+        if (!isInput && e.key === 's') { e.preventDefault(); document.getElementById('tagInput').focus(); return; }
         if (!isInput && e.key === 'a') { e.preventDefault(); selectAllPage(); return; }
-        // d: download selected (only when not in input)
         if (!isInput && e.key === 'd') { e.preventDefault(); downloadSelected(); return; }
-        // Escape: clear selection / close overlays
         if (e.key === 'Escape') {
-            if (document.getElementById('previewOverlay').classList.contains('show')) {
-                hidePreview(); return;
-            }
-            if (document.getElementById('contextMenu').classList.contains('open')) {
-                document.getElementById('contextMenu').classList.remove('open'); return;
-            }
+            if (document.getElementById('previewOverlay').classList.contains('show')) { hidePreview(); return; }
+            if (document.getElementById('contextMenu').classList.contains('open')) { document.getElementById('contextMenu').classList.remove('open'); return; }
             if (!isInput && selectedIds.size > 0) { deselectAll(); return; }
         }
-        // j/k: navigate cards when not in input
         if (!isInput && (e.key === 'j' || e.key === 'k')) {
             e.preventDefault();
             navigateCards(e.key === 'j' ? 1 : -1);
         }
     });
 }
-
-let _focusedCardIdx = -1;
 function navigateCards(dir) {
     const cards = document.querySelectorAll('#gallery .card');
     if (!cards.length) return;
@@ -1564,171 +1888,28 @@ function navigateCards(dir) {
     cards[_focusedCardIdx].scrollIntoView({behavior: 'smooth', block: 'nearest'});
 }
 
-// ── Preview ──
-let _previewTimeout = null;
-function showPreview(url, ext) {
-    clearTimeout(_previewTimeout);
-    _previewTimeout = setTimeout(() => {
-        const overlay = document.getElementById('previewOverlay');
-        const content = document.getElementById('previewContent');
-        const isVideo = ext === 'mp4' || ext === 'webm';
-        if (isVideo) {
-            content.innerHTML = '<video src="' + url + '" autoplay loop muted playsinline controls style="max-width:90vw;max-height:90vh;"></video>';
-            const vid = content.querySelector('video');
-            if (vid) vid.play().catch(() => {});
-        } else {
-            content.innerHTML = '<img src="' + url + '" alt="Preview" onerror="this.parentElement.parentElement.classList.remove(\'show\')" />';
-        }
-        overlay.classList.add('show');
-    }, 3000);
-}
-function hidePreview() { clearTimeout(_previewTimeout); document.getElementById('previewOverlay').classList.remove('show'); setTimeout(() => { if (!document.getElementById('previewOverlay').classList.contains('show')) document.getElementById('previewContent').innerHTML = ''; }, 200); }
-function closePreview(e) { if (e && e.target !== document.getElementById('previewOverlay')) return; hidePreview(); }
-
-// ── Gallery Rendering ──
-function renderPage() {
-    const start = currentPage * PAGE_SIZE;
-    const page = allPosts.slice(start, start + PAGE_SIZE);
-    const gallery = document.getElementById('gallery');
-    const totalPages = Math.ceil(allPosts.length / PAGE_SIZE);
-
-    if (!page.length) { gallery.innerHTML = '<div class="empty"><p>No results on this page</p></div>'; return; }
-
-    let html = '';
-    if (totalPages > 1) {
-        html += '<div style="grid-column:1/-1;display:flex;gap:8px;align-items:center;padding:4px 0;font-size:0.8rem;color:#8a7050">' +
-            '<button onclick="currentPage=Math.max(0,currentPage-1);renderPage();window.scrollTo(0,0);" ' + (currentPage===0?'disabled':'') + ' style="font-size:0.78rem">◀ Prev</button>' +
-            '<span>Page ' + (currentPage+1) + ' of ' + totalPages + '</span>' +
-            '<button onclick="currentPage=Math.min(' + (totalPages-1) + ',currentPage+1);renderPage();window.scrollTo(0,0);" ' + (currentPage>=totalPages-1?'disabled':'') + ' style="font-size:0.78rem">Next ▶</button>' +
-            '<span style="margin-left:auto">' + allPosts.length + ' total</span></div>';
-    }
-
-    const isList = densityMode === 2;
-    html += page.map(p => {
-        const allTagsStr = (p.tags || []).join(' ');
-        if (isList) {
-            return '<div class="card' + (selectedIds.has(p.id) ? ' selected' : '') + '" data-id="' + p.id + '" data-alltags="' + esc(allTagsStr) + '" data-file="' + esc(p.file_url) + '" data-ext="' + esc(p.ext) + '" onclick="toggleCard(' + p.id + ', event)">' +
-                '<input type="checkbox" class="sel" ' + (selectedIds.has(p.id) ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleCard(' + p.id + ', event)" />' +
-                '<img class="thumb" src="' + p.preview_url + '" alt="Post ' + p.id + '" loading="lazy" onerror="this.src=\\'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 60 60%22><rect fill=%22%23f0e6d4%22 width=%2260%22 height=%2260%22/><text fill=%22%23c8b488%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%228%22>Err</text></svg>\\'" />' +
-                '<span class="list-id">#' + p.id + '</span>' +
-                '<div class="meta"><span class="dims">' + p.width + '×' + p.height + '</span></div>' +
-                '<span class="list-rating"><span class="rating ' + p.rating + '">' + (p.rating || '?') + '</span></span>' +
-                '<div class="tags">' + (p.tags || []).slice(0, 10).join(' ') + '</div></div>';
-        }
-        return '<div class="card' + (selectedIds.has(p.id) ? ' selected' : '') + '" data-id="' + p.id + '" data-alltags="' + esc(allTagsStr) + '" data-file="' + esc(p.file_url) + '" data-ext="' + esc(p.ext) + '" onclick="toggleCard(' + p.id + ', event)">' +
-            '<input type="checkbox" class="sel" ' + (selectedIds.has(p.id) ? 'checked' : '') + ' onclick="event.stopPropagation(); toggleCard(' + p.id + ', event)" />' +
-            '<img class="thumb" src="' + p.preview_url + '" alt="Post ' + p.id + '" loading="lazy" onerror="this.src=\\'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%23f0e6d4%22 width=%22200%22 height=%22200%22/><text fill=%22%23c8b488%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22>Err</text></svg>\\'" />' +
-            '<div class="meta"><span class="dims">' + p.width + '×' + p.height + '</span><span class="rating ' + p.rating + '">' + (p.rating || '?') + '</span></div>' +
-            '<div class="tags">' + (p.tags || []).slice(0, 5).join(' ') + '</div></div>';
-    }).join('');
-
-    gallery.innerHTML = html;
-    updateSelCount();
-}
-
-function updateSelCount() {
-    if (!searchDone) return;
-    document.getElementById('selPageNum').textContent = selectedIds.size;
-    document.getElementById('dlCount').textContent = selectedIds.size;
-    document.getElementById('dlBtn').disabled = selectedIds.size === 0;
-    document.getElementById('downloadBar').classList.toggle('hidden', selectedIds.size === 0);
-    document.getElementById('dlCountNum').textContent = selectedIds.size;
-}
-
-function toggleCard(id, event) {
-    if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
-    const card = document.querySelector('.card[data-id="' + id + '"]');
-    if (card) card.classList.toggle('selected', selectedIds.has(id));
-    const cb = card?.querySelector('.sel');
-    if (cb) cb.checked = selectedIds.has(id);
-    updateSelCount();
-}
-
-function selectAllPage() { allPosts.forEach(p => selectedIds.add(p.id)); renderPage(); updateSelCount(); }
-function deselectAll() { selectedIds.clear(); renderPage(); updateSelCount(); }
-
-// ── Download ──
-function downloadSelected() {
-    if (selectedIds.size === 0) { alert('Select at least one image first.'); return; }
-    const fill = document.getElementById('dlProgressFill');
-    const text = document.getElementById('dlProgressText');
-    if (fill) fill.style.width = '0%';
-    if (text) text.textContent = '0%';
-
-    fetch('/api/download', {
-        method: 'POST', headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ids: Array.from(selectedIds)})
-    }).then(r => r.json()).then(data => {
-        if (data.error) throw new Error(data.error);
-        pollProgress(data.download_id);
-    }).catch(e => { if (text) text.textContent = 'Error: ' + e.message; });
-}
-
-function pollProgress(dlId) {
-    activeDlId = dlId;
-    const fill = document.getElementById('dlProgressFill');
-    const text = document.getElementById('dlProgressText');
-    const interval = setInterval(() => {
-        fetch('/api/download/' + dlId).then(r => r.json()).then(prog => {
-            const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
-            if (fill) fill.style.width = pct + '%';
-            if (text) text.textContent = prog.done + '/' + prog.total;
-            if (prog.status === 'complete') {
-                clearInterval(interval);
-                const failInfo = prog.failed > 0 ? ', ' + prog.failed + ' fail' : '';
-                if (text) { text.textContent = '✓ Done (' + prog.skipped + ' skip' + failInfo + ')'; text.style.color = prog.failed > 0 ? '#c88a1a' : '#3a7840'; }
-                setTimeout(() => { if (fill) fill.style.width = '0%'; if (text) { text.textContent = '0%'; text.style.color = ''; } selectedIds.clear(); renderPage(); }, 3500);
+// ── Status Icon ──
+function loadStatus() {
+    fetch('/api/status')
+        .then(r => r.json())
+        .then(s => {
+            const h1 = document.getElementById('topIcon');
+            if (s.configured) {
+                h1.textContent = '🔞';
+                h1.title = 'Logged in as ...' + s.user_id;
+            } else {
+                h1.textContent = '⚠️';
+                h1.title = 'Not configured — click ⚙ to set API credentials';
+                h1.style.cursor = 'pointer';
+                h1.onclick = () => openSettings();
             }
-        });
-    }, 800);
-}
-
-// ── Files ──
-function toggleFile(name, checked) { if (checked) selectedFileNames.add(name); else selectedFileNames.delete(name); }
-function selectAllFiles() { document.querySelectorAll('#fileList input[type="checkbox"]').forEach(cb => { cb.checked = true; const n = cb.closest('.file-item')?.dataset.name; if (n) selectedFileNames.add(n); }); }
-function deselectAllFiles() { document.querySelectorAll('#fileList input[type="checkbox"]').forEach(cb => cb.checked = false); selectedFileNames.clear(); }
-function deleteFile(name) { if (!confirm('Delete ' + name + '?')) return; fetch('/api/files/' + encodeURIComponent(name), {method: 'DELETE'}).then(r => r.json()).then(() => loadFiles()).catch(e => alert('Delete failed: ' + e.message)); }
-function deleteSelectedFiles() { if (!selectedFileNames.size) { alert('Select files first.'); return; } if (!confirm('Delete ' + selectedFileNames.size + ' files?')) return; fetch('/api/files/delete_batch', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({names: Array.from(selectedFileNames)})}).then(r => r.json()).then(() => { selectedFileNames.clear(); loadFiles(); }).catch(e => alert('Delete failed: ' + e.message)); }
-
-// ── Settings ──
-function openSettings() { document.getElementById('settingsOverlay').classList.add('open'); loadSettings(); }
-function closeSettings() { document.getElementById('settingsOverlay').classList.remove('open'); document.getElementById('cfgStatus').textContent = ''; document.getElementById('cfgStatus').className = 'status-msg'; }
-function saveConfig() {
-    const body = {};
-    const credentials = document.getElementById('cfgCredentials').value.trim();
-    const delay = parseFloat(document.getElementById('cfgDelay').value);
-    const timeout = parseInt(document.getElementById('cfgTimeout').value);
-    const download_dir = document.getElementById('cfgDownloadDir').value.trim();
-    if (credentials) body.credentials = credentials;
-    if (!isNaN(delay)) body.delay = delay;
-    if (!isNaN(timeout)) body.timeout = timeout;
-    if (download_dir) body.download_dir = download_dir;
-    const statusEl = document.getElementById('cfgStatus');
-    fetch('/api/config', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)})
-    .then(r => r.json()).then(data => {
-        statusEl.textContent = data.configured ? '✓ Settings saved. API connected.' : '⚠ Saved but API not configured — check credentials.';
-        statusEl.className = 'status-msg ' + (data.configured ? 'ok' : 'err');
-        if (data.configured) { loadSettings(); loadStatus(); }
-    }).catch(e => { statusEl.textContent = 'Error: ' + e.message; statusEl.className = 'status-msg err'; });
-}
-function testConnection() {
-    const credentials = document.getElementById('cfgCredentials').value.trim();
-    const statusEl = document.getElementById('cfgStatus');
-    const btn = document.querySelector('.test-btn');
-    if (!credentials) { statusEl.textContent = '⚠ Enter API credentials first.'; statusEl.className = 'status-msg err'; return; }
-    btn.disabled = true; btn.textContent = 'Testing...'; statusEl.textContent = 'Testing connection...'; statusEl.className = 'status-msg';
-    fetch('/api/test-connection', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({credentials})})
-    .then(r => r.json()).then(data => {
-        btn.disabled = false; btn.textContent = 'Test Connection';
-        statusEl.textContent = data.ok ? '✓ ' + data.message : '✗ ' + (data.error || 'Connection failed');
-        statusEl.className = 'status-msg ' + (data.ok ? 'ok' : 'err');
-        if (data.ok) loadSettings();
-    }).catch(e => { btn.disabled = false; btn.textContent = 'Test Connection'; statusEl.textContent = '✗ Error: ' + e.message; statusEl.className = 'status-msg err'; });
+        }).catch(() => {});
 }
 
 </script>
 </body>
-</html>"""
+</html>
+"""
 
 @app.route("/")
 def index():
